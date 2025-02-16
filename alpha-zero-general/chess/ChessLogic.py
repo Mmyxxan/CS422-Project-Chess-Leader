@@ -153,4 +153,4 @@ class Board:
         return self.state[0] == GameState.STALEMATE
     
     def is_in_progress(self):
-        return self.state[0] == GameState.IN_PROGRESS
+        return self.state[0] == GameState.IN_PROGRESS or self.state[0] == GameState.CHECK

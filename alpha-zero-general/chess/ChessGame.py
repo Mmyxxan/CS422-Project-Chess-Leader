@@ -70,3 +70,7 @@ class ChessGame(Game):
     @staticmethod
     def display(board):
         board.print_board()
+
+    @staticmethod
+    def displayGrid(board):
+        board.print_board_with_grid()

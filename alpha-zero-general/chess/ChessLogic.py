@@ -125,6 +125,17 @@ class Board:
         for row in self.board:
             print(" ".join(str(piece) for piece in row))
 
+    def print_board_with_grid(self):
+        """Prints the board with labeled rows and columns for easier gameplay."""
+        column_labels = "  a b c d e f g h"
+        print(column_labels)
+        print("  -----------------")
+        for i, row in enumerate(self.board):
+            row_str = f"{8 - i}|" + " ".join(str(piece) if str(piece) != "." else "." for piece in row)
+            print(row_str)
+        print("  -----------------")
+        print(column_labels)
+
     def get_board_matrix(self):
         """Returns the board as a matrix of strings."""
         return [[str(piece) if piece else "." for piece in row] for row in self.board]

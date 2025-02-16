@@ -24,6 +24,6 @@ if human_vs_cpu:
     player2 = hp
     player1 = rp
 
-arena = Arena.Arena(player1, player2, g, display=ChessGame.display)
+arena = Arena.Arena(player1, player2, g, display=ChessGame.displayGrid)
 
 print(arena.playGames(2, verbose=True))

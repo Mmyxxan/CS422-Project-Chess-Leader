@@ -1,14 +1,25 @@
 import numpy as np
+from .ChessPiece import PieceType
 
 def parse_move(move_str):
     """
-    Converts move notation (e.g., 'e2 e4') into board indices.
+    Converts move notation (e.g., 'e2 e4' or 'e7 e8 Q') into board indices.
+    Handles optional pawn promotion (e.g., 'e7 e8 Q' -> promotion to Queen).
     """
     try:
-        start, end = move_str.split()
+        parts = move_str.split()
+        if len(parts) < 2 or len(parts) > 3:
+            return None  # Invalid format
+        
+        start, end = parts[0], parts[1]
         start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
         end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
-        return start_row, start_col, end_row, end_col
+        
+        promotion = parts[2].upper() if len(parts) == 3 else None
+        if promotion and promotion not in {'Q', 'R', 'B', 'N'}:
+            return 'P'  # Invalid promotion piece
+        
+        return start_row, start_col, end_row, end_col, promotion
     except:
         return None
 
@@ -45,10 +56,21 @@ class HumanChessPlayer():
                 print("Invalid move format. Use notation like 'e2 e4'. Try again.")
                 continue
 
-            i, j, r, c = move
+            i, j, r, c, promoted_piece = move
+
+            if promoted_piece == 'P':
+                promotion_piece = 0
+            elif promoted_piece == 'Q':
+                promotion_piece = 4
+            elif promoted_piece == 'R':
+                promotion_piece = 3
+            elif promoted_piece == 'B':
+                promotion_piece = 1
+            elif promoted_piece == 'N':
+                promotion_piece = 2                
 
             # Validate move
-            if not valid[(board_size ** 2) * (board_size * i + j) + board_size * r + c]:
+            if not valid[(board_size ** 2) * (board_size * i + j) + board_size * r + c + (8 ** 2) * (8 ** 2) * promotion_piece]:
                 print("Illegal move. Try again.")
                 continue
             else:

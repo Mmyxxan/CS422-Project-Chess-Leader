@@ -171,3 +171,6 @@ class ChessPiece:
                 self.color = PieceColor.BLACK
             else:
                 self.color = PieceColor.WHITE
+
+    def is_promotable(self, new_row):
+        return False

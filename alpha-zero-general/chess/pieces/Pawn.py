@@ -178,3 +178,6 @@ class Pawn(ChessPiece):
             
         else:
             raise ValueError("Pawn cannot be promoted unless it reaches the last rank!")
+        
+    def is_promotable(self, new_row):
+        return True if (self.color == PieceColor.WHITE and new_row == 0) or (self.color == PieceColor.BLACK and new_row == 7) else False

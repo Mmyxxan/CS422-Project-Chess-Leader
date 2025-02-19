@@ -3,7 +3,7 @@ import sys
 sys.path.append('..')
 from Game import Game
 from .ChessLogic import Board
-from .ChessPiece import PieceColor
+from .ChessPiece import PieceColor, PieceType
 import numpy as np
 import copy
 
@@ -11,6 +11,9 @@ class ChessGame(Game):
     """
     White is 1, Black is -1
     """
+    promotion_pieces = [PieceType.PAWN, PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK, PieceType.QUEEN]
+    PROMOTION_SIZE = len(promotion_pieces)
+    NUMS_CHUNK = (8 ** 2) * (8 ** 2)
 
     def __init__(self):
         pass
@@ -23,15 +26,20 @@ class ChessGame(Game):
         return 8
 
     def getActionSize(self):
-        return (8 ** 2) * (8 ** 2)
+        return (8 ** 2) * (8 ** 2) * self.PROMOTION_SIZE
 
     def getNextState(self, board, player, action):
         board_size = len(board.board)
         b = copy.deepcopy(board)
-        cell = int(action / (board_size ** 2))
-        move = action % (board_size ** 2)
+        r_action = action % self.PROMOTION_SIZE
+        promoted_piece = self.promotion_pieces[action // self.PROMOTION_SIZE] if action // self.PROMOTION_SIZE > 0 else None
+
+        cell = int(r_action / (board_size ** 2))
+        move = r_action % (board_size ** 2)
+
         piece, new_row, new_col = b.board[int(cell / board_size)][cell % board_size], int(move / board_size), move % board_size
-        b.execute_move(piece, new_row, new_col)
+        b.execute_move(piece, new_row, new_col, promoted_piece)
+
         return (b, -player)
 
     def getValidMoves(self, board, player):
@@ -39,12 +47,19 @@ class ChessGame(Game):
         valids = [0]*self.getActionSize()
         legalMoves =  board.get_legal_moves(PieceColor.WHITE if player == 1 else PieceColor.BLACK)
         board_size = len(board.board)
-        for i in range(board_size):
-            for j in range(board_size):
-                for r in range(board_size):
-                    for c in range(board_size):
-                        if legalMoves[i][j][r][c]:
-                            valids[(board_size ** 2) * (board_size * i + j) + board_size * r + c] = 1
+        for chunk in range (self.PROMOTION_SIZE):
+            for i in range(board_size):
+                for j in range(board_size):
+                    for r in range(board_size):
+                        for c in range(board_size):
+                            if legalMoves[i][j][r][c]:
+                                if chunk == 0:
+                                    valids[(board_size ** 2) * (board_size * i + j) + board_size * r + c + chunk * self.NUMS_CHUNK] = 1
+                                else: 
+                                    if board[i][j].is_promotable(r):
+                                        valids[(board_size ** 2) * (board_size * i + j) + board_size * r + c + chunk * self.NUMS_CHUNK] = 1
+                                    else:
+                                        valids[(board_size ** 2) * (board_size * i + j) + board_size * r + c + chunk * self.NUMS_CHUNK] = 0
         return np.array(valids)
 
     def getGameEnded(self, board, player):

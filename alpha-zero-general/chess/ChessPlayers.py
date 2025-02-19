@@ -17,7 +17,7 @@ def parse_move(move_str):
         
         promotion = parts[2].upper() if len(parts) == 3 else None
         if promotion and promotion not in {'Q', 'R', 'B', 'N'}:
-            return 'P'  # Invalid promotion piece
+            return None  # Invalid promotion piece
         
         return start_row, start_col, end_row, end_col, promotion
     except:
@@ -58,16 +58,14 @@ class HumanChessPlayer():
 
             i, j, r, c, promoted_piece = move
 
-            if promoted_piece == 'P':
-                promotion_piece = 0
-            elif promoted_piece == 'Q':
-                promotion_piece = 4
-            elif promoted_piece == 'R':
+            if promoted_piece == 'Q':
                 promotion_piece = 3
+            elif promoted_piece == 'R':
+                promotion_piece = 2
             elif promoted_piece == 'B':
-                promotion_piece = 1
+                promotion_piece = 0
             elif promoted_piece == 'N':
-                promotion_piece = 2                
+                promotion_piece = 1               
 
             # Validate move
             if not valid[(board_size ** 2) * (board_size * i + j) + board_size * r + c + (8 ** 2) * (8 ** 2) * promotion_piece]:

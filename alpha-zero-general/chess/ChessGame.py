@@ -11,7 +11,7 @@ class ChessGame(Game):
     """
     White is 1, Black is -1
     """
-    promotion_pieces = [PieceType.PAWN, PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK, PieceType.QUEEN]
+    promotion_pieces = [PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK, PieceType.QUEEN]
     PROMOTION_SIZE = len(promotion_pieces)
     NUMS_CHUNK = (8 ** 2) * (8 ** 2)
 

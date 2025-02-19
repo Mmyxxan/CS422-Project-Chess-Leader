@@ -74,7 +74,7 @@ class HumanChessPlayer():
                 print("Illegal move. Try again.")
                 continue
             else:
-                a = (board_size ** 2) * (board_size * i + j) + board_size * r + c
+                a = (board_size ** 2) * (board_size * i + j) + board_size * r + c + (8 ** 2) * (8 ** 2) * promotion_piece
                 break
 
         return a

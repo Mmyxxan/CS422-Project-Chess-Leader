@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+kafka-topics:
+  start-game: start-game
+  game-history: game-history
+
+spring:
+  profiles:
+    active: dev
+
+---
+
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  application:
+    name: game-service
+  profiles: dev
+  kafka:
+    bootstrap-servers: localhost:9092
+
+---
+
+spring:
+  profiles: test
+
+eureka:
+  client:
+    registerWithEureka: false
+    fetchRegistry: false

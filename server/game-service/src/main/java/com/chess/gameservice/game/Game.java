@@ -17,12 +17,39 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
+@Getter
+@Setter
 public class Game {
+    private Board board;
+    private Players players;
+    private CurrentTurn currentTurn;
+    private GamePhase gamePhase;
+    private PlayerMove latestMove;
+    @JsonIgnore
+    private LocalDateTime startTime;
+    @JsonIgnore
+    private UUID gameId;
+    @JsonIgnore
+    private boolean withAi;
+
+    @JsonIgnore
+    private ArrayList<GameTurn> gameTurns;
+
+    public Game() {
+        board = new Board();
+        players = new Players();
+        gameTurns = new ArrayList<>();
+        gamePhase = GamePhase.WAITING_FOR_PLAYERS;
+        currentTurn = new CurrentTurn();
+        latestMove = new PlayerMove();
+        startTime = LocalDateTime.now();
+    }
     
 }

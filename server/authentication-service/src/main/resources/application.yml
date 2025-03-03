@@ -1,0 +1,27 @@
+server:
+  port: 8001
+
+spring:
+  application:
+    name: authentication-service
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQLDialect
+  datasource:
+    url: jdbc:mysql://localhost:3306/leader-chess
+    username: "admin"
+    password: "leaderchess"
+
+security:
+  jwt:
+    token:
+      secret-key: dinhwe2612
+      expire-length: 604800000
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8000/eureka/

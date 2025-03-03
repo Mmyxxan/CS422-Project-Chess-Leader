@@ -7,11 +7,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    database-platform: org.hibernate.dialect.MySQLDialect
   datasource:
-    url: jdbc:mysql://localhost:3306/leader-chess
-    username: "admin"
-    password: "leaderchess"
+    url: jdbc:mysql://localhost:3306/chessleader
+    username: "root"
+    password: "dinhwe2612"
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 security:
   jwt:

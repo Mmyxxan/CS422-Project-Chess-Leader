@@ -11,7 +11,7 @@ class ChessGame(Game):
     """
     White is 1, Black is -1
     """
-    promotion_pieces = [PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK, PieceType.QUEEN]
+    promotion_pieces = [PieceType.QUEEN, PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK]
     PROMOTION_SIZE = len(promotion_pieces)
     NUMS_CHUNK = (8 ** 2) * (8 ** 2)
 
@@ -31,9 +31,8 @@ class ChessGame(Game):
     def getNextState(self, board, player, action):
         board_size = len(board.board)
         b = copy.deepcopy(board)
-        chunk = (8 ** 2) * (8 ** 2)
-        r_action = action % chunk
-        promoted_piece = self.promotion_pieces[action // chunk] if action // chunk > 0 else None
+        r_action = action % self.NUMS_CHUNK
+        promoted_piece = self.promotion_pieces[action // self.NUMS_CHUNK] if action // self.NUMS_CHUNK >= 0 else None
         cell = int(r_action / (board_size ** 2))
         move = r_action % (board_size ** 2)
 

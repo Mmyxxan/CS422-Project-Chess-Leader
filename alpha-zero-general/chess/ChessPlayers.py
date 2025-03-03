@@ -58,6 +58,8 @@ class HumanChessPlayer():
 
             i, j, r, c, promoted_piece = move
 
+            promotion_piece = 0
+
             if promoted_piece == 'Q':
                 promotion_piece = 3
             elif promoted_piece == 'R':

@@ -31,9 +31,9 @@ class ChessGame(Game):
     def getNextState(self, board, player, action):
         board_size = len(board.board)
         b = copy.deepcopy(board)
-        r_action = action % self.PROMOTION_SIZE
-        promoted_piece = self.promotion_pieces[action // self.PROMOTION_SIZE] if action // self.PROMOTION_SIZE > 0 else None
-
+        chunk = (8 ** 2) * (8 ** 2)
+        r_action = action % chunk
+        promoted_piece = self.promotion_pieces[action // chunk] if action // chunk > 0 else None
         cell = int(r_action / (board_size ** 2))
         move = r_action % (board_size ** 2)
 

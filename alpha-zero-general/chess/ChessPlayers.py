@@ -61,13 +61,13 @@ class HumanChessPlayer():
             promotion_piece = 0
 
             if promoted_piece == 'Q':
-                promotion_piece = 3
-            elif promoted_piece == 'R':
-                promotion_piece = 2
-            elif promoted_piece == 'B':
                 promotion_piece = 0
+            elif promoted_piece == 'B':
+                promotion_piece = 1
             elif promoted_piece == 'N':
-                promotion_piece = 1               
+                promotion_piece = 2       
+            elif promoted_piece == 'R':
+                promotion_piece = 3     
 
             # Validate move
             if not valid[(board_size ** 2) * (board_size * i + j) + board_size * r + c + (8 ** 2) * (8 ** 2) * promotion_piece]:

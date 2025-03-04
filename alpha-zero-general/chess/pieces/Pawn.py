@@ -163,21 +163,26 @@ class Pawn(ChessPiece):
         if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
             # Determine the new piece
             if new_type == PieceType.QUEEN:
-                promoted_piece = Queen(self.color)
+                self.piece_type = PieceType.QUEEN
+                # promoted_piece = Queen(self.color)
             elif new_type == PieceType.ROOK:
-                promoted_piece = Rook(self.color)
+                self.piece_type = PieceType.ROOK
+                # promoted_piece = Rook(self.color)
             elif new_type == PieceType.BISHOP:
-                promoted_piece = Bishop(self.color)
+                self.piece_type = PieceType.BISHOP
+                # promoted_piece = Bishop(self.color)
             elif new_type == PieceType.KNIGHT:
-                promoted_piece = Knight(self.color)
+                self.piece_type = PieceType.KNIGHT
+                # promoted_piece = Knight(self.color)
             else:
                 raise ValueError("Invalid promotion piece type!")
 
             # Place the promoted piece on the board
-            promoted_piece.place_piece(board, self.row, self.column) 
+            # promoted_piece.place_piece(board, self.row, self.column) 
             
         else:
             raise ValueError("Pawn cannot be promoted unless it reaches the last rank!")
         
     def is_promotable(self, new_row):
-        return True if (self.color == PieceColor.WHITE and new_row == 0) or (self.color == PieceColor.BLACK and new_row == 7) else False
+        # return True if (self.color == PieceColor.WHITE and new_row == 0) or (self.color == PieceColor.BLACK and new_row == 7) else False
+        return True if new_row == 0 or new_row == 7 else False

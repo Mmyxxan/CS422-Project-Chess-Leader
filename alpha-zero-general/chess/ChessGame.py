@@ -37,6 +37,7 @@ class ChessGame(Game):
         move = r_action % (board_size ** 2)
 
         piece, new_row, new_col = b.board[int(cell / board_size)][cell % board_size], int(move / board_size), move % board_size
+        print(piece.piece_type, piece.row, piece.row, new_row, new_col)
         b.execute_move(piece, new_row, new_col, promoted_piece)
 
         return (b, -player)

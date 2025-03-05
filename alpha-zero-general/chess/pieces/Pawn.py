@@ -44,7 +44,7 @@ class Pawn(ChessPiece):
             last_piece, last_from, last_to = last_move
             if (
                 isinstance(last_piece, Pawn)
-                # and last_piece.color != self.color
+                and last_piece.color != self.color
                 and abs(last_from[0] - last_to[0]) == 2  # Was a two-step pawn move
                 and last_from[1] in [self.column - 1, self.column + 1]  # Was adjacent to this pawn
                 and self.row == last_to[0]  # En passant can only occur if on the same rank
@@ -87,7 +87,7 @@ class Pawn(ChessPiece):
             last_piece, last_from, last_to = last_move
             if (
                 isinstance(last_piece, Pawn)
-                # and last_piece.color != self.color
+                and last_piece.color != self.color
                 and abs(last_from[0] - last_to[0]) == 2  # Was a two-step pawn move
                 and last_from[1] in [self.column - 1, self.column + 1]  # Was adjacent to this pawn
                 and self.row == last_to[0]  # En passant can only occur if on the same rank
@@ -187,3 +187,10 @@ class Pawn(ChessPiece):
     def is_promotable(self, new_row):
         # return True if (self.color == PieceColor.WHITE and new_row == 0) or (self.color == PieceColor.BLACK and new_row == 7) else False
         return True if new_row == 0 or new_row == 7 else False
+    
+    # def reverse_color(self):
+    #     if self.color == PieceColor.WHITE:
+    #         self.color = PieceColor.BLACK
+    #     else:
+    #         self.color = PieceColor.WHITE
+    #     self.direction = -self.direction

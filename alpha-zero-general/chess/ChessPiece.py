@@ -48,6 +48,8 @@ class ChessPiece:
             for j in range(size):
                 if board[i][j].piece_type == PieceType.KING and board[i][j].color == color:
                     return board[i][j]
+        for row in board:
+            print(" ".join(str(piece) for piece in row))
         return None
     
     def is_king_in_check_for_castling(self, board, king, last_move=None):
@@ -81,17 +83,18 @@ class ChessPiece:
 
         # Find this piece in the copied board
         simulated_piece = simulated_board[self.row][self.column]
-        target_piece = simulated_board[new_row][new_col]
+        # target_piece = simulated_board[new_row][new_col]
 
         # Record last_move
         last_move = (simulated_piece, (self.row, self.column), (new_row, new_col))
 
         # Execute the move on the copied board
-        if new_row != self.row or new_col != self.column:
-            target_piece.die()
-            simulated_board[new_row][new_col] = simulated_piece
-            simulated_board[self.row][self.column] = ChessPiece()
-            simulated_piece.row, simulated_piece.column = new_row, new_col
+        # if new_row != self.row or new_col != self.column:
+        #     target_piece.die()
+        #     simulated_board[new_row][new_col] = simulated_piece
+        #     simulated_board[self.row][self.column] = ChessPiece()
+        #     simulated_piece.row, simulated_piece.column = new_row, new_col
+        simulated_piece.execute_move(simulated_board, new_row, new_col)
 
         # Find the king of the same color in the copied board
         king = self.find_king(simulated_board, self.color)
@@ -111,20 +114,23 @@ class ChessPiece:
 
         # Find this piece in the copied board
         simulated_piece = simulated_board[self.row][self.column]
-        target_piece = simulated_board[new_row][new_col]
+        # target_piece = simulated_board[new_row][new_col]
 
         # Record last_move
         last_move = (simulated_piece, (self.row, self.column), (new_row, new_col))
 
         # Execute the move on the copied board
-        if new_row != self.row or new_col != self.column:
-            target_piece.die()
-            simulated_board[new_row][new_col] = simulated_piece
-            simulated_board[self.row][self.column] = ChessPiece()
-            simulated_piece.row, simulated_piece.column = new_row, new_col
+        # if new_row != self.row or new_col != self.column:
+        #     target_piece.die()
+        #     simulated_board[new_row][new_col] = simulated_piece
+        #     simulated_board[self.row][self.column] = ChessPiece()
+        #     simulated_piece.row, simulated_piece.column = new_row, new_col
+        simulated_piece.execute_move(simulated_board, new_row, new_col)
 
         # Find the king of the same color in the copied board
         king = self.find_king(simulated_board, self.color)
+        if not king: 
+            print(self.piece_type, self.row, self.column, new_row, new_col)
 
         # Check if the king is in check after the move
         is_in_check = self.is_king_in_check(simulated_board, king, last_move)

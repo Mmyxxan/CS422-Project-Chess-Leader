@@ -13,7 +13,7 @@ import java.util.ArrayList;
 @Setter
 @Getter
 @NoArgsConstructor
-public class Bishop extends Piece implements Serializable {
+public class Bishop extends Piece implements Serializable { // 
 
     Bishop(PlayerColor playerColor) {
         super(playerColor,PieceType.BISHOP);

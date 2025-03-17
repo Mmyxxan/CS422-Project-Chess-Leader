@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -51,5 +50,125 @@ public class Game {
         latestMove = new PlayerMove();
         startTime = LocalDateTime.now();
     }
+
+    public void setPlayer(Player player, PlayerColor playerColor) {
+        players.put(playerColor, player);
+    }
+
+    public void makeMove(PlayerMovePayload playerMovePayload, Player player) throws GameException {
+        checkIfPlayerTurn(player);
+        checkIfPromotionIsPending();
+
+        Piece piece = board.movePiece(playerMovePayload.getInitialPosition(),
+                playerMovePayload.getDestinationPosition(),
+                currentTurn.getCurrentPlayerColor());
+
+        if (board.getCheckState() == CheckState.CHECK_MATE) {
+            setGamePhase(GamePhase.GAME_OVER);
+        }
+
+        if (board.getPositionAwaitingPromotion() == null) {
+            changeTurn();
+        }
+
+        latestMove = PlayerMove.builder().initialPosition(playerMovePayload.getInitialPosition())
+                .destinationPosition(playerMovePayload.getDestinationPosition()).build();
+
+        gameTurns.add(GameTurn.builder()
+                .playerColor(piece.getPlayerColor())
+                .initialPosition(playerMovePayload.getInitialPosition())
+                .destinationPosition(playerMovePayload.getDestinationPosition())
+                .turnNumber(currentTurn.getTurnNumber())
+                .pieceType(piece.getType()).build());
+    }
+
+    // Change this to aplha-zero model, and in ai folder
+    public void makeAiMove(PlayerMovePayload playerMovePayload, Player player) throws GameException {
+        makeMove(playerMovePayload, player);
+
+        if (board.getPositionAwaitingPromotion() != null) {
+            makePromotion(playerMovePayload.getDestinationPosition(), player, PieceType.QUEEN);
+        }
+    }
+
+    private void checkIfPlayerTurn(Player player) throws GameException {
+        if (gamePhase == GamePhase.GAME_OVER) {
+            throw new GameException("Game is over.");
+        }
+        if (!players.get(currentTurn.getCurrentPlayerColor()).equals(player)) {
+            throw new GameException("Wrong turn.");
+        }
+    }
+
+    private void checkIfPromotionIsPending() throws GameException {
+        if (board.getPositionAwaitingPromotion() != null) {
+            throw new GameException("There is a pending promotion.");
+        }
+    }
+
+    public ArrayList<Position> getAvailableMoves(Position position, Player player) throws GameException {
+        checkIfPlayerTurn(player);
+        checkIfPromotionIsPending();
+
+        return board.getAvailableMoves(position, currentTurn.getCurrentPlayerColor());
+    }
+
+    public void makePromotion(Position position, Player player, PieceType selectedPromotion) throws GameException {
+        checkIfPlayerTurn(player);
+        board.makePromotion(position, currentTurn.getCurrentPlayerColor(), selectedPromotion);
+        changeTurn();
+    }
     
+    private void changeTurn() {
+        players.changeTurn(currentTurn.getCurrentPlayerColor(), gameId);
+        currentTurn.changeTurn();
+    }
+
+    public void playerTimedOutOrOutOfTime() {
+        setGamePhase(GamePhase.GAME_OVER);
+    }
+
+    @JsonIgnore
+    public boolean isOver() {
+        return gamePhase == GamePhase.GAME_OVER;
+    }
+
+    public Optional<UUID> isPlayerPresentInGame(String playerName) {
+        if (getPlayers().values().stream().anyMatch(user -> user.getName().equals(playerName))) {
+            return Optional.of(gameId);
+        }
+        return Optional.empty();
+    }
+    
+    public void forfeit(String playerName) {
+        PlayerColor winner = players.forfeitAndGetWinner(currentTurn.getCurrentPlayerColor(), playerName);
+        if (currentTurn.getCurrentPlayerColor() != winner) {
+            currentTurn.changeTurnWithoutIncrementingTurnNumber();
+        }
+        setGamePhase(GamePhase.GAME_OVER);
+    }
+
+    @JsonIgnore
+    public Duration getGameDuration() {
+        return players.getGameDuration();
+    }
+
+    @JsonIgnore
+    public PlayerColor getCurrentPlayerColor() {
+        return currentTurn.getCurrentPlayerColor();
+    }
+
+    @JsonIgnore
+    public String getWinner() {
+        return players.get(PlayerColor.getOtherColor(currentTurn.getCurrentPlayerColor())).getName();
+    }
+
+    public void initGame(UUID gameId) {
+        setGamePhase(GamePhase.STARTED);
+        setGameId(gameId);
+    }
+
+    public void beforeDestroy() {
+        players.beforeDestroy();
+    }
 }

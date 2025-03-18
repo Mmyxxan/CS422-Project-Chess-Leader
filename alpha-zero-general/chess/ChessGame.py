@@ -40,6 +40,8 @@ class ChessGame(Game):
         print(piece.piece_type, piece.row, piece.column, new_row, new_col)
         b.execute_move(piece, new_row, new_col, promoted_piece)
 
+        # self.display(b)
+
         return (b, -player)
 
     def getValidMoves(self, board, player):
@@ -77,10 +79,42 @@ class ChessGame(Game):
         return canonical_board if player == -1 else board
 
     def getSymmetries(self, board, pi):
-        pass
+        # generate white side board, black side board of the same example and the corresponding policy
+        # for data augmentation and diversity
+        # map: 
+        # horizontal flip: row i -> 7 - i
+        # 90 degree: right
+        # 270 degree: left
+        # 180 degree: row i -> 7 - i, column i -> 7 - i
+        # vertical flip: column i -> 7 - i
+        symmetries = []
+        board_size = len(board.board)  # Assuming it's 8x8
+        # board_reshaped = np.array(board).reshape((board_size, board_size))
+        board_reshaped = np.array(board.board)   # Board is not flattened
+        
+        # Convert policy back to matrix form
+        pi_array = np.array(pi)  # Convert to NumPy array
+        pi_matrix = pi_array.reshape((board_size, board_size, board_size, board_size, self.PROMOTION_SIZE))
+
+        # Generate symmetries (rotations and flips)
+        for rot in range(4):  # Rotations: 0°, 90°, 180°, 270°
+            rotated_board = np.rot90(board_reshaped, k=rot)
+            rotated_pi = np.rot90(pi_matrix, k=rot, axes=(0, 1))  # Rotate moving piece
+            rotated_pi = np.rot90(rotated_pi, k=rot, axes=(2, 3))  # Rotate destination
+            
+            # symmetries.append((rotated_board.flatten(), rotated_pi.flatten()))
+            symmetries.append((rotated_board, rotated_pi.flatten()))
+            
+            # Flipping the board horizontally
+            flipped_board = np.fliplr(rotated_board)
+            flipped_pi = np.fliplr(rotated_pi)
+            # symmetries.append((flipped_board.flatten(), flipped_pi.flatten()))
+            symmetries.append((flipped_board, flipped_pi.flatten()))
+        
+        return symmetries
 
     def stringRepresentation(self, board):
-        return board.get_board_matrix()
+        return tuple(tuple(row) for row in board.get_board_matrix())
     
     @staticmethod
     def display(board):
@@ -89,3 +123,8 @@ class ChessGame(Game):
     @staticmethod
     def displayGrid(board):
         board.print_board_with_grid()
+
+    @staticmethod
+    def can_castle(board, color, side):
+        king = board[0][0].find_king(board, color)
+        return king.can_castle(board, side)

@@ -78,18 +78,21 @@ class ValueHead(nn.Module):
         self.conv = nn.Conv2d(in_channels=input_channels, out_channels=1, kernel_size=1)
         self.bn = nn.BatchNorm2d(1)
         self.relu1 = nn.ReLU()
-        self.fc = nn.Linear(64, 256)
+        self.fc1 = nn.Linear(64, 256)
         self.relu2 = nn.ReLU()
-        self.fc = nn.Linear(256, 1)
+        self.fc2 = nn.Linear(256, 1)
         self.tanh = nn.Tanh()
     
     def forward(self, x):
         x = self.conv(x)
         x = self.bn(x)
         x = self.relu1(x)
-        x = self.fc(x)
+
+        x = x.view(x.shape[0], -1)  # Flatten to (batch_size, 64)
+
+        x = self.fc1(x)
         x = self.relu2(x)
-        x = self.fc(x)
+        x = self.fc2(x)
         x = self.tanh(x)
 
         return x

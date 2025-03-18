@@ -2,6 +2,11 @@ from ..ChessPiece import ChessPiece
 from ..ChessPiece import PieceColor
 from ..ChessPiece import PieceType
 from .Rook import Rook
+from enum import Enum
+
+class CastlingSide(Enum):
+    QUEEN_SIDE = 0
+    KING_SIDE = 1
 
 class King(ChessPiece):
     def __init__(self, color=PieceColor.NONE, row=-1, column=-1):
@@ -13,6 +18,26 @@ class King(ChessPiece):
             (0, 1), (0, -1),          # Right, Left
             (-1, 1), (-1, 0), (-1, -1)  # Up-Right, Up, Up-Left
         ]
+
+    def can_castle(self, board, side):
+        if not self.has_moved:  # King must not have moved before
+            if side == CastlingSide.KING_SIDE:
+                # Kingside castling
+                if isinstance(board[self.row][self.column + 3], Rook) and not board[self.row][self.column + 3].has_moved:
+                    if board[self.row][self.column + 1].piece_type == PieceType.NONE and board[self.row][self.column + 2].piece_type == PieceType.NONE:
+                        for i in range(3):
+                            if not super().is_legal_move(board, self.row, self.column + i):
+                                return True
+            elif side == CastlingSide.QUEEN_SIDE:
+                # Queenside castling
+                if isinstance(board[self.row][self.column - 4], Rook) and not board[self.row][self.column - 4].has_moved:
+                    if (board[self.row][self.column - 1].piece_type == PieceType.NONE and 
+                        board[self.row][self.column - 2].piece_type == PieceType.NONE and 
+                        board[self.row][self.column - 3].piece_type == PieceType.NONE):
+                        for i in range(3):
+                            if not super().is_legal_move(board, self.row, self.column - i):
+                                return True
+        return False
 
     def get_valid_moves(self, board, last_move=None):
         size = len(board)
@@ -69,7 +94,8 @@ class King(ChessPiece):
 
             # Move the rook
             rook = board[self.row][rook_col]
-            board[self.row][rook_col] = ChessPiece()  # Clear old rook position
+            # board[self.row][rook_col] = ChessPiece()  # Clear old rook position
+            ChessPiece().place_piece(board, self.row, rook_col)
             board[self.row][new_rook_col].die()
             board[self.row][new_rook_col] = rook  # Place rook in new position
             rook.column = new_rook_col
@@ -78,7 +104,8 @@ class King(ChessPiece):
         target_piece = board[new_row][new_col]
         if target_piece.piece_type == PieceType.NONE or target_piece.color != self.color:
             target_piece.die()  # Capture the piece if it's an enemy
-            board[self.row][self.column] = ChessPiece()  # Clear old position
+            # board[self.row][self.column] = ChessPiece()  # Clear old position
+            ChessPiece().place_piece(board, self.row, self.column)
             self.row, self.column = new_row, new_col
             board[new_row][new_col] = self  # Place King in new position
 

@@ -32,6 +32,8 @@ class Board:
         """
         Initializes the chessboard with pieces in their standard positions.
         """
+        # ChessPiece()'s place piece for king & bishop already else not modified
+        # Empty cell has color too
         self.board = [[ChessPiece() for _ in range(8)] for _ in range(8)]  # Fill board with blank ChessPiece objects
 
         # Placing Pawns

@@ -175,8 +175,11 @@ class ChessPiece:
         if self.color:
             if self.color == PieceColor.WHITE:
                 self.color = PieceColor.BLACK
-            else:
+            elif self.color == PieceColor.BLACK:
                 self.color = PieceColor.WHITE
 
     def is_promotable(self, new_row):
+        return False
+    
+    def can_castle(self, board, side):
         return False

@@ -3,6 +3,8 @@ from .ChessPiece import PieceColor
 from .ChessLogic import GameState
 from .ChessPiece import ChessPiece 
 from .pieces.Pawn import Pawn
+from .pieces.King import CastlingSide
 from .ChessLogic import Board
 from .ChessGame import ChessGame
 from .ChessPlayers import *
+from .pytorch import NNet

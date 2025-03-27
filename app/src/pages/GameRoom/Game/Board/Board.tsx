@@ -40,16 +40,23 @@ const Board: React.FC<Props> = ({
   userColor,
   latestMove,
 }) => {
+  const getRowIndex = (row: number) =>
+    userColor === PlayerColor.White ? row : 7 - row;
+
   return (
     <div>
       <BoardDragLayer />
       <StyledBoardContainer>
-        {boardState.map((row, x) =>
-          row.map((cell, y) => {
-            const position = { x, y };
+        {Array.from({ length: 8 }, (_, row) =>
+          Array.from({ length: 8 }, (_, col) => {
+            const actualRow = getRowIndex(row);
+
+            const cell = boardState[actualRow][col];
+            const position: BoardPosition = { x: actualRow, y: col };
+
             return (
               <Cell
-                key={`${x}${y}`}
+                key={`${row}${col}`}
                 getAvailableMoves={getAvailableMoves}
                 isSelected={arePositionsEqual(position, selectedPosition)}
                 isMoveAvailable={availableMoves.some(item =>
@@ -74,5 +81,4 @@ const Board: React.FC<Props> = ({
     </div>
   );
 };
-
 export default Board;

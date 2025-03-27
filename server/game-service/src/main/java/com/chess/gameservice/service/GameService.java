@@ -32,7 +32,7 @@ import java.util.UUID;
 public class GameService {
 
     private final HashMap<UUID, Game> games = new HashMap<>();
-    private final MinMax minMax = new MinMax();
+    private final MinMax minMax = new MinMax(); // AI
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public GameService(ApplicationEventPublisher applicationEventPublisher) {

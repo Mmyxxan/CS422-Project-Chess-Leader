@@ -1,27 +1,48 @@
 server:
-  port: 8001
+  port: 8083
 
+spring:
+  profiles:
+    active: dev
+
+---
 spring:
   application:
     name: authentication-service
+  profiles: dev
   jpa:
     hibernate:
       ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQL5Dialect
   datasource:
-    url: jdbc:mysql://localhost:3306/chessleader
+    url: jdbc:mysql://localhost:3306/chess
     username: "root"
-    password: "dinhwe2612"
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: "password"
 
 security:
   jwt:
     token:
-      secret-key: dinhwe2612
+      secret-key: secret-key
       expire-length: 604800000
 
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8000/eureka/
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+image-path: /images
+
+---
+
+spring:
+  profiles: test
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+
+image-path:

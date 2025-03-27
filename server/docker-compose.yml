@@ -1,0 +1,114 @@
+services:
+  eureka-server:
+    build: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+
+
+  gateway-service:
+    build: gateway-service
+    ports:
+      - "8090:8090"
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+
+  game-service:
+    build: game-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+      - gateway-service
+      - kafka
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_KAFKA_BOOTSTRAPSERVERS: kafka:9092
+
+  chat-service:
+    build: chat-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - eureka-server
+      - gateway-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+
+  authentication-service:
+    build: authentication-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - eureka-server
+      - gateway-service
+      - mysql
+    volumes:
+      - ../app/public/assets/images/user:/images
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/chess
+
+  queue-service:
+    build: queue-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - eureka-server
+      - gateway-service
+      - kafka
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_KAFKA_BOOTSTRAPSERVERS: kafka:9092
+
+  history-service:
+    build: history-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - eureka-server
+      - gateway-service
+      - mysql
+      - kafka
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/chess
+      SPRING_KAFKA_BOOTSTRAPSERVERS: kafka:9092
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: chess
+      MYSQL_USER: chess
+      MYSQL_PASSWORD: chess
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: wurstmeister/kafka:2.12-2.3.0
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "game:1:1, start-game:1:1"
+      KAFKA_MESSAGE_MAX_BYTES: 200000
+
+volumes:
+  db:
+  kafka:

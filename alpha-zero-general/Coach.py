@@ -49,7 +49,7 @@ class Coach():
         board = self.game.getInitBoard()
         self.curPlayer = 1
         episodeStep = 0
-
+        # print()
         while True:
             episodeStep += 1
             canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
@@ -61,11 +61,17 @@ class Coach():
                 trainExamples.append([b, self.curPlayer, p, None])
 
             action = np.random.choice(len(pi), p=pi)
-            board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action)
+            board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action) 
 
-            r = self.game.getGameEnded(board, self.curPlayer)
+            # print(episodeStep) 
+            
+            # for row in board:
+            #     print(" ".join(str(piece) for piece in row))
+
+            r = self.game.getGameEnded(board, self.curPlayer, episodeStep)
 
             if r != 0:
+                print(r)
                 return [(x[0], x[2], r * ((-1) ** (x[1] != self.curPlayer))) for x in trainExamples]
 
     def learn(self):

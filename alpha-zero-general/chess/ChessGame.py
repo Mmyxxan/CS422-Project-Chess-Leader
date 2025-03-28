@@ -3,7 +3,7 @@ import sys
 sys.path.append('..')
 from Game import Game
 from .ChessLogic import Board
-from .ChessPiece import PieceColor, PieceType
+from .ChessPiece import PieceColor, PieceType, MoveDirection73
 import numpy as np
 import copy
 
@@ -11,40 +11,58 @@ class ChessGame(Game):
     """
     White is 1, Black is -1
     """
-    promotion_pieces = [PieceType.QUEEN, PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK]
-    PROMOTION_SIZE = len(promotion_pieces)
-    NUMS_CHUNK = (8 ** 2) * (8 ** 2)
+    # promotion_pieces = [PieceType.QUEEN, PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK]
+    # PROMOTION_SIZE = len(promotion_pieces)
+    # NUMS_CHUNK = 8 * 8
 
     def __init__(self):
+        # self.step = 0
+        self.STEP_LIMIT = 140
         pass
 
     def getInitBoard(self):
         b = Board()
+        # self.step = 0
         return b
 
     def getBoardSize(self):
         return 8
 
     def getActionSize(self):
-        return (8 ** 2) * (8 ** 2) * self.PROMOTION_SIZE
+        return 8 * 8 * 73
+        # return (8 ** 2) * (8 ** 2) * self.PROMOTION_SIZE
 
     def getNextState(self, board, player, action):
         board_size = len(board.board)
         b = copy.deepcopy(board)
-        r_action = action % self.NUMS_CHUNK
-        promoted_piece = self.promotion_pieces[action // self.NUMS_CHUNK] if action // self.NUMS_CHUNK >= 0 else None
-        cell = int(r_action / (board_size ** 2))
-        move = r_action % (board_size ** 2)
+        cell = int(action / 73)
+        piece = b.board[int(cell / board_size)][cell % board_size]
 
-        piece, new_row, new_col = b.board[int(cell / board_size)][cell % board_size], int(move / board_size), move % board_size
-        print(piece.piece_type, piece.row, piece.column, new_row, new_col)
+        r_action = action % 73
+        dr, dc = MoveDirection73.get(r_action)
+        new_row = piece.row + dr
+        new_col = piece.column + dc
+        promoted_piece = PieceType.QUEEN
+
+        # print(r_action, piece, piece.row, piece.column)
+
+        if r_action in MoveDirection73.get_promotion_indices():
+            dr, dc = piece.direction, MoveDirection73.get(r_action)[1]
+            new_row = piece.row + dr
+            new_col = piece.column + dc
+            promoted_piece = MoveDirection73.get_promotion_piece(r_action)
+        
+        # print(piece.piece_type, piece.row, piece.column, new_row, new_col)
         b.execute_move(piece, new_row, new_col, promoted_piece)
+
+        # self.step = self.step + 1
 
         # self.display(b)
 
         return (b, -player)
 
     def getValidMoves(self, board, player):
+        return board.get_legal_moves(PieceColor.WHITE if player == 1 else PieceColor.BLACK)
         # should be modified to contain valid pawn promotions
         valids = [0]*self.getActionSize()
         legalMoves =  board.get_legal_moves(PieceColor.WHITE if player == 1 else PieceColor.BLACK)
@@ -64,7 +82,10 @@ class ChessGame(Game):
                                         valids[(board_size ** 2) * (board_size * i + j) + board_size * r + c + chunk * self.NUMS_CHUNK] = 0
         return np.array(valids)
 
-    def getGameEnded(self, board, player):
+    def getGameEnded(self, board, player, step):
+        if step and step >= self.STEP_LIMIT:
+            # print("EXCEED STEP LIMIT")
+            return 1e-4
         if board.is_in_progress():
             return 0
         if board.is_win(player):
@@ -78,7 +99,7 @@ class ChessGame(Game):
         canonical_board.reverse_board()
         return canonical_board if player == -1 else board
 
-    def getSymmetries(self, board, pi):
+    def getSymmetries_(self, board, pi):
         # generate white side board, black side board of the same example and the corresponding policy
         # for data augmentation and diversity
         # map: 
@@ -105,12 +126,24 @@ class ChessGame(Game):
             # symmetries.append((rotated_board.flatten(), rotated_pi.flatten()))
             symmetries.append((rotated_board, rotated_pi.flatten()))
             
-            # Flipping the board horizontally
+            # Flipping the board horizontally. What about vertically, -v?
             flipped_board = np.fliplr(rotated_board)
             flipped_pi = np.fliplr(rotated_pi)
             # symmetries.append((flipped_board.flatten(), flipped_pi.flatten()))
             symmetries.append((flipped_board, flipped_pi.flatten()))
+
+            # After the horizontal flip and rotation code:
+            flipped_vertical_board = np.flipud(rotated_board)  # Flip vertically (up-down)
+            flipped_vertical_pi = np.flipud(rotated_pi)  # Flip policy vertically
+
+            # Add the flipped vertical versions to the list of symmetries
+            symmetries.append((flipped_vertical_board, flipped_vertical_pi.flatten()))
         
+        return symmetries
+    
+    def getSymmetries(self, board, pi):
+        symmetries = []
+        symmetries.append((board.board, pi))
         return symmetries
 
     def stringRepresentation(self, board):

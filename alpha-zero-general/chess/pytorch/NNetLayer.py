@@ -58,7 +58,7 @@ class PolicyHead(nn.Module):
         self.conv = nn.Conv2d(in_channels=input_channels, out_channels=2, kernel_size=1)
         self.bn = nn.BatchNorm2d(2)
         self.relu = nn.ReLU()
-        self.fc = nn.Linear(64 * 2, 64 * 64 * 4)
+        self.fc = nn.Linear(64 * 2, 64 * 73)
 
     def forward(self, x):
         x = self.conv(x)

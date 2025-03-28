@@ -15,14 +15,110 @@ class PieceColor(Enum):
     WHITE = 1
     BLACK = 2
 
+
+class MoveDirection73:
+    directions = []
+
+    # Sliding directions: 8 directions × 7 distances
+    slide_dirs = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]
+    for dr, dc in slide_dirs:
+        for dist in range(1, 8):
+            directions.append((dr * dist, dc * dist))
+
+    # Knight moves: 8
+    directions.extend([
+        (-2, -1), (-2, 1), (-1, -2), (-1, 2),
+        (1, -2), (1, 2), (2, -1), (2, 1)
+    ])
+
+    # Underpromotions (N, B, R): 3 × 3 directions (forward, left, right)
+    # Forward
+    directions.extend([(-1, 0)] * 3)
+    # Left capture
+    directions.extend([(-1, -1)] * 3)
+    # Right capture
+    directions.extend([(-1, 1)] * 3)
+
+    # Castling (King-side and Queen-side)
+    # directions.append((0, 2))
+    # directions.append((0, -2))
+
+    # print(len(directions))
+
+    # for i in range(73):
+    #     print(i, directions[i])
+
+    assert len(directions) == 73, "Directions must be exactly 73."
+    @classmethod
+    def get(self, index: int):
+        return self.directions[index]
+    @classmethod
+    def index(self, dr: int, dc: int):
+        """Returns the first index matching the given delta."""
+        return self.directions.index((dr, dc))
+    @classmethod
+    def all(self):
+        return self.directions
+    @classmethod
+    def get_promotion_indices(self):
+        """Returns a list of indices for underpromotion directions."""
+        return list(range(64, 73))
+    @classmethod
+    def get_promotion_piece(self, index):
+        """Return the promotion piece"""
+        if index == 64 or index == 67 or index == 70:
+            return PieceType.KNIGHT
+        if index == 65 or index == 68 or index == 71:
+            return PieceType.BISHOP
+        return PieceType.ROOK
+    @classmethod
+    def get_knight_indices(self):
+        return list(range(56, 64))
+    @classmethod
+    def get_sliding_indices(self):
+        return list(range(0, 56))
+    @classmethod
+    def get_castling_indices(self):
+        return [71, 72]
+    @classmethod 
+    def translate_move(self, piece, index):
+        dr, dc = self.get(index)
+        new_row = piece.row + dr
+        new_col = piece.column + dc
+        promoted_piece = PieceType.QUEEN
+
+        if index in self.get_promotion_indices():
+            dr, dc = piece.direction, self.get(index)[1]
+            new_row = piece.row + dr
+            new_col = piece.column + dc
+            promoted_piece = self.get_promotion_piece(index)
+        
+        return new_row, new_col, promoted_piece
+
 class ChessPiece:
     def __init__(self, piece_type=PieceType.NONE, color=PieceColor.NONE, row=-1, column=-1):
         self.piece_type = piece_type
         self.color = color
         self.row = row
         self.column = column
-        self.is_alive = True
+        # self.is_alive = True
         self.has_moved = False
+
+    # def __deepcopy__(self, memo):
+    #     # Only copy the necessary attributes, avoid recursive references
+    #     cls = self.__class__
+    #     copied = cls.__new__(cls)
+    #     memo[id(self)] = copied
+
+    #     # Manually copy the primitive attributes
+    #     copied.piece_type = self.piece_type
+    #     copied.color = self.color
+    #     copied.row = self.row
+    #     copied.column = self.column
+    #     copied.is_alive = self.is_alive
+    #     copied.has_moved = self.has_moved
+
+    #     return copied
 
     def __str__(self):
         piece_symbols = {
@@ -48,6 +144,7 @@ class ChessPiece:
             for j in range(size):
                 if board[i][j].piece_type == PieceType.KING and board[i][j].color == color:
                     return board[i][j]
+        print()
         for row in board:
             print(" ".join(str(piece) for piece in row))
         return None
@@ -56,21 +153,35 @@ class ChessPiece:
         size = len(board)
         for i in range(size):
             for j in range(size):
-                if board[i][j].piece_type != PieceType.KING and board[i][j].piece_type != PieceType.NONE and board[i][j].color != king.color and board[i][j].get_valid_moves_without_check(board, last_move)[king.row][king.column]:
-                    return True
+                if board[i][j].piece_type != PieceType.KING and board[i][j].piece_type != PieceType.NONE and board[i][j].color != king.color:
+                    mask = board[i][j].get_valid_moves_without_check(board, last_move)
+                    for index in range(len(mask)):
+                        if mask[index]:
+                            move = MoveDirection73.translate_move(board[i][j], index)
+                            if move[0] == king.row and move[1] == king.column:
+                                return True
                 elif board[i][j].piece_type == PieceType.KING and board[i][j].color != king.color:
                     opponent_king = board[i][j]
                     if opponent_king.has_moved:
-                        if opponent_king.get_valid_moves_without_check(board, last_move)[king.row][king.column]:
-                            return True
+                        mask = opponent_king.get_valid_moves_without_check(board, last_move)
+                        for index in range(len(mask)):
+                            if mask[index]:
+                                move = MoveDirection73.translate_move(opponent_king, index)
+                                if move[0] == king.row and move[1] == king.column:
+                                    return True
         return False
                 
     def is_king_in_check(self, board, king, last_move=None):
         size = len(board)
         for i in range(size):
             for j in range(size):
-                if board[i][j].piece_type != PieceType.NONE and board[i][j].color != king.color and board[i][j].get_valid_moves_without_check(board, last_move)[king.row][king.column]:
-                    return True
+                if board[i][j].piece_type != PieceType.NONE and board[i][j].color != king.color:
+                    mask = board[i][j].get_valid_moves_without_check(board, last_move)
+                    for index in range(len(mask)):
+                        if mask[index]:
+                            move = MoveDirection73.translate_move(board[i][j], index)
+                            if move[0] == king.row and move[1] == king.column:
+                                return True
         return False
     
     def is_legal_move_for_castling(self, board, new_row, new_col):
@@ -127,6 +238,9 @@ class ChessPiece:
         #     simulated_piece.row, simulated_piece.column = new_row, new_col
         simulated_piece.execute_move(simulated_board, new_row, new_col)
 
+        # for row in simulated_board:
+        #     print(" ".join(str(piece) for piece in row))
+
         # Find the king of the same color in the copied board
         king = self.find_king(simulated_board, self.color)
         if not king: 
@@ -138,6 +252,9 @@ class ChessPiece:
         return not is_in_check
     
     def get_valid_moves(self, board, last_move=None):
+        pass
+
+    def get_valid_moves_without_check(self, board, last_move=None):
         pass
 
     def execute_move(self, board, new_row, new_col, last_move=None, promoted_piece=PieceType.QUEEN):
@@ -169,7 +286,8 @@ class ChessPiece:
         board[row][column] = self  # Place piece on board
 
     def die(self):
-        self.is_alive = False
+        pass
+    #     self.is_alive = False
 
     def reverse_color(self):
         if self.color:

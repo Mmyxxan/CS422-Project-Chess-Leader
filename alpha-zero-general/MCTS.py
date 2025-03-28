@@ -40,14 +40,14 @@ class MCTS():
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
 
-        if temp == 0:
+        if temp == 0: # As the temp is cooling down, only allow optimal moves
             bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
             bestA = np.random.choice(bestAs)
             probs = [0] * len(counts)
             probs[bestA] = 1
             return probs
 
-        counts = [x ** (1. / temp) for x in counts]
+        counts = [x ** (1. / temp) for x in counts] # soft pick of action for stochastic property
         counts_sum = float(sum(counts))
         probs = [x / counts_sum for x in counts]
         return probs
@@ -75,7 +75,7 @@ class MCTS():
         s = self.game.stringRepresentation(canonicalBoard)
 
         if s not in self.Es:
-            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
+            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1, None)
         if self.Es[s] != 0:
             # terminal node
             return -self.Es[s]

@@ -1,6 +1,6 @@
 from ..ChessPiece import ChessPiece
 from ..ChessPiece import PieceColor
-from ..ChessPiece import PieceType
+from ..ChessPiece import PieceType, MoveDirection73
 from .Rook import Rook
 from enum import Enum
 
@@ -13,11 +13,11 @@ class King(ChessPiece):
         super().__init__(PieceType.KING, color, row, column)
         
         # The King moves one step in all 8 directions
-        self.move_directions = [
-            (1, 1), (1, 0), (1, -1),  # Down-Right, Down, Down-Left
-            (0, 1), (0, -1),          # Right, Left
-            (-1, 1), (-1, 0), (-1, -1)  # Up-Right, Up, Up-Left
-        ]
+        # self.move_directions = [
+        #     (1, 1), (1, 0), (1, -1),  # Down-Right, Down, Down-Left
+        #     (0, 1), (0, -1),          # Right, Left
+        #     (-1, 1), (-1, 0), (-1, -1)  # Up-Right, Up, Up-Left
+        # ]
 
     def can_castle(self, board, side):
         if not self.has_moved:  # King must not have moved before
@@ -27,7 +27,9 @@ class King(ChessPiece):
                     if board[self.row][self.column + 1].piece_type == PieceType.NONE and board[self.row][self.column + 2].piece_type == PieceType.NONE:
                         for i in range(3):
                             if not super().is_legal_move(board, self.row, self.column + i):
-                                return True
+                                return False
+                        return True
+                    
             elif side == CastlingSide.QUEEN_SIDE:
                 # Queenside castling
                 if isinstance(board[self.row][self.column - 4], Rook) and not board[self.row][self.column - 4].has_moved:
@@ -36,10 +38,62 @@ class King(ChessPiece):
                         board[self.row][self.column - 3].piece_type == PieceType.NONE):
                         for i in range(3):
                             if not super().is_legal_move(board, self.row, self.column - i):
-                                return True
+                                return False
+                        return True
+                    
         return False
 
     def get_valid_moves(self, board, last_move=None):
+        size = len(board)
+        mask = [0] * 73
+
+        # Normal 1-step moves (first 8 sliding directions)
+        for i in range(0, 56, 7):
+            dr, dc = MoveDirection73.get(i)
+            new_row = self.row + dr
+            new_col = self.column + dc
+
+            if 0 <= new_row < size and 0 <= new_col < size:
+                target = board[new_row][new_col]
+                if target.piece_type == PieceType.NONE or target.color != self.color:
+                    if super().is_legal_move(board, new_row, new_col):
+                        mask[i] = 1
+
+        # Castling - Kingside (index 71)
+        if not self.has_moved:
+            try:
+                rook = board[self.row][self.column + 3]
+                if isinstance(rook, Rook) and not rook.has_moved:
+                    if (board[self.row][self.column + 1].piece_type == PieceType.NONE and
+                        board[self.row][self.column + 2].piece_type == PieceType.NONE):
+                        path_safe = True
+                        for i in range(3):
+                            if not super().is_legal_move(board, self.row, self.column + i):
+                                path_safe = False
+                                break
+                        if path_safe:
+                            mask[15] = 1
+            except IndexError:
+                pass
+
+            # Castling - Queenside (index 72)
+            try:
+                rook = board[self.row][self.column - 4]
+                if isinstance(rook, Rook) and not rook.has_moved:
+                    if (board[self.row][self.column - 1].piece_type == PieceType.NONE and
+                        board[self.row][self.column - 2].piece_type == PieceType.NONE and
+                        board[self.row][self.column - 3].piece_type == PieceType.NONE):
+                        path_safe = True
+                        for i in range(3):
+                            if not super().is_legal_move(board, self.row, self.column - i):
+                                path_safe = False
+                                break
+                        if path_safe:
+                            mask[22] = 1
+            except IndexError:
+                pass
+
+        return mask
         size = len(board)
         matrix = [[0 for _ in range(size)] for _ in range(size)]
 
@@ -115,6 +169,7 @@ class King(ChessPiece):
         return board, None
     
     def get_valid_moves_without_check(self, board, last_move=None):
+        return self.get_action_mask(board, last_move)
         size = len(board)
         matrix = [[0 for _ in range(size)] for _ in range(size)]
 
@@ -151,3 +206,56 @@ class King(ChessPiece):
                             break
 
         return matrix  # Return the move matrix
+    
+    def get_action_mask(self, board, last_move=None):
+        size = len(board)
+        mask = [0] * 73
+
+        # Normal 1-step moves (first 8 sliding directions)
+        for i in range(0, 56, 7):
+            dr, dc = MoveDirection73.get(i)
+            # if abs(dr) > 1 or abs(dc) > 1:
+            #     print("FALSE")
+            new_row = self.row + dr
+            new_col = self.column + dc
+
+            if 0 <= new_row < size and 0 <= new_col < size:
+                target = board[new_row][new_col]
+                if target.piece_type == PieceType.NONE or target.color != self.color:
+                    mask[i] = 1
+
+        # Castling - Kingside (index 71)
+        if not self.has_moved:
+            try:
+                rook = board[self.row][self.column + 3]
+                if isinstance(rook, Rook) and not rook.has_moved:
+                    if (board[self.row][self.column + 1].piece_type == PieceType.NONE and
+                        board[self.row][self.column + 2].piece_type == PieceType.NONE):
+                        path_safe = True
+                        for i in range(3):
+                            if not super().is_legal_move_for_castling(board, self.row, self.column + i):
+                                path_safe = False
+                                break
+                        if path_safe:
+                            mask[15] = 1
+            except IndexError:
+                pass
+
+            # Castling - Queenside (index 72)
+            try:
+                rook = board[self.row][self.column - 4]
+                if isinstance(rook, Rook) and not rook.has_moved:
+                    if (board[self.row][self.column - 1].piece_type == PieceType.NONE and
+                        board[self.row][self.column - 2].piece_type == PieceType.NONE and
+                        board[self.row][self.column - 3].piece_type == PieceType.NONE):
+                        path_safe = True
+                        for i in range(3):
+                            if not super().is_legal_move_for_castling(board, self.row, self.column - i):
+                                path_safe = False
+                                break
+                        if path_safe:
+                            mask[22] = 1
+            except IndexError:
+                pass
+
+        return mask

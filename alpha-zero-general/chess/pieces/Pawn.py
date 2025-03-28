@@ -1,10 +1,12 @@
 from ..ChessPiece import ChessPiece
 from ..ChessPiece import PieceColor
 from ..ChessPiece import PieceType
+from ..ChessPiece import MoveDirection73
 from .Rook import Rook
 from .Knight import Knight
 from .Bishop import Bishop
 from .Queen import Queen
+from typing import List
 
 class Pawn(ChessPiece):
     def __init__(self, color=PieceColor.NONE, row=-1, column=-1):
@@ -12,14 +14,16 @@ class Pawn(ChessPiece):
         
         # Adjust move directions based on color
         self.direction = -1 if color == PieceColor.WHITE else 1
+        """
         self.move_directions = [(self.direction, 0)]  # Normal move
         if (self.color == PieceColor.WHITE and self.row == 6) or (self.color == PieceColor.BLACK and self.row == 1):
             self.move_directions.append((2 * self.direction, 0))  # Two-square move
-        
         self.attack_directions = [(self.direction, 1), (self.direction, -1)]  # Diagonal attack moves
+        """
         # self.en_passant_target = None
 
     def get_valid_moves_without_check(self, board, last_move=None):
+        return self.get_action_mask(board, last_move)
         matrix = [[0 for _ in range(len(board))] for _ in range(len(board))]
 
         # Check normal movement (can only move forward if the cell is empty)
@@ -61,6 +65,21 @@ class Pawn(ChessPiece):
         return matrix  # Return the move matrix
 
     def get_valid_moves(self, board, last_move=None):
+        mask = self.get_action_mask(board, last_move)
+        for i in range(len(mask)):
+            dr, dc = MoveDirection73.get(i)
+            new_row = self.row + dr
+            new_col = self.column + dc
+
+            if i in MoveDirection73.get_promotion_indices():
+                dr, dc = self.direction, MoveDirection73.get(i)[1]
+                new_row = self.row + dr
+                new_col = self.column + dc
+            
+            if mask[i] and not super().is_legal_move(board, new_row, new_col):
+                mask[i] = 0
+
+        return mask
         matrix = [[0 for _ in range(len(board))] for _ in range(len(board))]
 
         # Check normal movement (can only move forward if the cell is empty)
@@ -117,12 +136,16 @@ class Pawn(ChessPiece):
         #         if 0 <= self.column - 2 < len(board) and isinstance(board[self.row][self.column - 2], Pawn) and board[self.row][self.column - 2].color == self.color:
         #             board[self.row][self.column - 2].en_passant_target = None
 
+        # target_piece = None
+
         # Remove en passant caught pawn
         if new_col != self.column and board[new_row][new_col].piece_type == PieceType.NONE:
             board[new_row][new_col].die()
-            board[new_row - self.direction][new_col].die()
             target_piece = board[new_row - self.direction][new_col]
+            board[new_row - self.direction][new_col].die()
+            
             board[new_row - self.direction][new_col] = ChessPiece()
+
             board[new_row][new_col] = self
             board[self.row][self.column] = ChessPiece()
             self.row = new_row
@@ -130,8 +153,9 @@ class Pawn(ChessPiece):
         #
         elif board[new_row][new_col].piece_type == PieceType.NONE or board[new_row][new_col].color != self.color:
             # Kill the target piece 
+            target_piece = board[new_row][new_col]
             board[new_row][new_col].die()
-            target_piece = board[new_row - self.direction][new_col]
+            
             # Move the piece
             board[self.row][self.column] = ChessPiece()  # Clear old position
             # if abs(new_row - self.row) == 2:
@@ -150,7 +174,8 @@ class Pawn(ChessPiece):
         if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
             self.promote(board, promoted_piece)
 
-        return board, target_piece if target_piece.piece_type != PieceType.NONE else None
+        # return board, target_piece if target_piece.piece_type != PieceType.NONE else None
+        return board, None
 
     def promote(self, board, new_type):
         """
@@ -194,3 +219,79 @@ class Pawn(ChessPiece):
     #     else:
     #         self.color = PieceColor.WHITE
     #     self.direction = -self.direction
+
+    def get_action_mask(self, board, last_move=None) -> List[int]:
+        mask = [0] * 73
+        size = len(board)
+
+        for i in range(73):
+            dr, dc = MoveDirection73.get(i)
+            new_row = self.row + dr
+            new_col = self.column + dc
+
+            if not (0 <= new_row < size and 0 <= new_col < size):
+                continue
+
+            target = board[new_row][new_col]
+
+            # ---- PROMOTIONS (indices 64–72) ----
+            if i in MoveDirection73.get_promotion_indices():
+                # Valid only if we're promotable
+                if not self.is_promotable(new_row):
+                    continue
+
+                dr, dc = self.direction, MoveDirection73.get(i)[1]
+                new_row = self.row + dr
+                new_col = self.column + dc
+
+                if not (0 <= new_row < size and 0 <= new_col < size):
+                    continue
+
+                target = board[new_row][new_col]
+
+                # (dr, dc) = (-1, 0), (-1, -1), (-1, 1)
+                if dc == 0:
+                    if target.piece_type == PieceType.NONE:
+                        mask[i] = 1
+                else:
+                    if target.piece_type != PieceType.NONE and target.color != self.color:
+                        mask[i] = 1
+                continue
+
+            # ---- NORMAL FORWARD MOVE ----
+            if dr == self.direction and dc == 0:
+                if target.piece_type == PieceType.NONE:
+                    mask[i] = 1
+                    continue
+
+            # ---- TWO-STEP FROM STARTING ROW ----
+            if dr == 2 * self.direction and dc == 0:
+                mid_row = self.row + self.direction
+                if ((self.color == PieceColor.WHITE and self.row == 6) or 
+                    (self.color == PieceColor.BLACK and self.row == 1)) and \
+                   board[mid_row][self.column].piece_type == PieceType.NONE and \
+                   target.piece_type == PieceType.NONE:
+                    mask[i] = 1
+                    continue
+
+            # ---- DIAGONAL CAPTURE ----
+            if dr == self.direction and abs(dc) == 1:
+                if target.piece_type != PieceType.NONE and target.color != self.color:
+                    mask[i] = 1
+                    continue
+
+            # ---- EN PASSANT ----
+            if last_move:
+                last_piece, last_from, last_to = last_move
+                if (
+                    isinstance(last_piece, Pawn)
+                    and last_piece.color != self.color
+                    and abs(last_from[0] - last_to[0]) == 2
+                    and last_to[0] == self.row
+                    and last_to[1] == self.column + dc
+                    and dr == self.direction
+                ):
+                    mask[i] = 1
+                    continue
+
+        return mask

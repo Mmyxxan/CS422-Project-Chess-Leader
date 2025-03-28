@@ -73,6 +73,20 @@ class Board:
 
     def get_legal_moves(self, color=PieceColor.NONE):
         size = len(self.board)
+        blank_mask = [0 for _ in range(0, 73)]
+        move_matrix = []
+        for i in range(size):
+            for j in range(size):
+                if self.board[i][j].piece_type != PieceType.NONE:
+                    if color == PieceColor.NONE or self.board[i][j].color == color:
+                        mask = self.board[i][j].get_valid_moves(self.board, self.last_move)
+                        move_matrix.extend(mask)
+                    else:
+                        move_matrix.extend(blank_mask)
+                else:
+                    move_matrix.extend(blank_mask)
+        return move_matrix
+        size = len(self.board)
         move_matrix = [[[[0 for _ in range(size)] for _ in range(size)] for _ in range(size)] for _ in range(size)]
         # state, color = self.state
         # if state == GameState.CHECK:
@@ -92,6 +106,12 @@ class Board:
         return move_matrix
 
     def has_legal_moves(self, color):
+        matrix = self.get_legal_moves(color)
+        size = len(self.board)
+        for i in range(len(matrix)):
+            if matrix[i]:
+                return True
+        return False
         matrix = self.get_legal_moves()
         size = len(self.board)
         for i in range(size):
@@ -106,6 +126,7 @@ class Board:
         # Update self.last_move
         self.last_move = (piece, (piece.row, piece.column), (new_row, new_col))
         # Execute the move
+        # print(piece, piece.row, piece.column, new_row, new_col)
         piece.execute_move(self.board, new_row, new_col, self.last_move, promoted_piece)
         # Update the game state
         king = piece.find_king(self.board, PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK)

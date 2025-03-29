@@ -53,10 +53,9 @@ const Board: React.FC<Props> = ({
 
             const cell = boardState[actualRow][col];
             const position: BoardPosition = { x: actualRow, y: col };
-
             return (
               <Cell
-                key={`${row}${col}`}
+                key={`${actualRow}${col}`}
                 getAvailableMoves={getAvailableMoves}
                 isSelected={arePositionsEqual(position, selectedPosition)}
                 isMoveAvailable={availableMoves.some(item =>
@@ -76,9 +75,38 @@ const Board: React.FC<Props> = ({
               />
             );
           }),
-        )}
+        )
+
+        /* {boardState.map((row, x) =>
+          row.map((cell, y) => {
+            const position = { x, y };
+            return (
+              <Cell
+                key={`${x}${y}`}
+                getAvailableMoves={getAvailableMoves}
+                isSelected={arePositionsEqual(position, selectedPosition)}
+                isMoveAvailable={availableMoves.some(item =>
+                  arePositionsEqual(position, item),
+                )}
+                makeMove={makeMove}
+                checkState={checkState}
+                currentPlayerColor={currentPlayerColor}
+                isLatestMove={
+                  arePositionsEqual(position, latestMove.destinationPosition) ||
+                  arePositionsEqual(position, latestMove.initialPosition)
+                }
+                position={position}
+                type={cell?.type}
+                pieceColor={cell?.playerColor}
+                userColor={userColor}
+              />
+            );
+          }),
+        )} */
+        }
       </StyledBoardContainer>
     </div>
   );
 };
+
 export default Board;

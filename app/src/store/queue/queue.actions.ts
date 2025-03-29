@@ -9,6 +9,8 @@ import {
   QueueLeftAction,
 } from './queue.types';
 
+import { AIDifficulties, GameModes } from '../../interfaces/Queue/GameModes';
+
 export const joinQueue = (): JoinQueueAction => ({
   type: QueueActionTypes.JOIN_QUEUE,
 });
@@ -38,8 +40,11 @@ export const leaveQueue = (): LeaveQueueAction => ({
   type: QueueActionTypes.LEAVE_QUEUE,
 });
 
-export const joinQueueAi = (): JoinQueueAiAction => ({
+export const joinQueueAi = (difficulty: AIDifficulties): JoinQueueAiAction => ({
   type: QueueActionTypes.JOIN_QUEUE_AI,
+  payload: {
+    difficulty,
+  },
 });
 
 export const queueError = (error: string): QueueErrorAction => ({

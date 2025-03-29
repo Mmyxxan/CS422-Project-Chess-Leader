@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
+import com.chess.gameservice.game.ai.AIDifficulty;
 
 @Getter
 @Setter
@@ -38,6 +39,8 @@ public class Game {
     private UUID gameId;
     @JsonIgnore
     private boolean withAi;
+    @JsonIgnore
+    private AIDifficulty aiDifficulty;
 
     @JsonIgnore
     private ArrayList<GameTurn> gameTurns;

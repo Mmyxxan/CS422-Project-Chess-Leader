@@ -2,6 +2,7 @@ package com.chess.gameservice.controller;
 
 import com.chess.gameservice.exception.GameException;
 import com.chess.gameservice.game.Game;
+import com.chess.gameservice.game.ai.AIDifficulty;
 import com.chess.gameservice.game.position.Position;
 import com.chess.gameservice.messages.events.PlayerOutOfTimeEvent;
 import com.chess.gameservice.messages.payloads.*;
@@ -16,6 +17,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import com.chess.gameservice.game.ai.AIDifficulty;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -52,11 +54,12 @@ public class GameController implements ApplicationListener<PlayerOutOfTimeEvent>
         playerMovedMessage.setPayload(game);
         simpMessagingTemplate.convertAndSend("/topic/state/" + gameId, playerMovedMessage);
         if (game.isWithAi()) {
-            makeMoveAi(gameId);
+            makeMoveAi(gameId, game.getAiDifficulty());
         }
     }
 
-    public void makeMoveAi(String gameId) throws GameException {
+    public void makeMoveAi(String gameId, AIDifficulty aiDifficulty ) throws GameException {
+         // switch case the mode according to the difficulty
         Game game = gameService.makeAiMove(UUID.fromString(gameId));
         if (game != null) {
             PlayerMovedMessage playerMovedMessage = new PlayerMovedMessage();
@@ -89,7 +92,7 @@ public class GameController implements ApplicationListener<PlayerOutOfTimeEvent>
         playerMovedMessage.setPayload(game);
         simpMessagingTemplate.convertAndSend("/topic/state/" + gameId, playerMovedMessage);
         if (game.isWithAi()) {
-            makeMoveAi(gameId);
+            makeMoveAi(gameId, game.getAiDifficulty());
         }
     }
 

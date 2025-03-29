@@ -2,6 +2,8 @@ export interface QueueState {
   readonly timeJoined: string;
 }
 
+import { AIDifficulties, GameModes } from '../../interfaces/Queue/GameModes';
+
 enum QueueBaseActionTypes {
   JOIN_QUEUE = 'JOIN_QUEUE',
   LEAVE_QUEUE = 'LEAVE_QUEUE',
@@ -51,6 +53,9 @@ export interface QueueLeftAction {
 
 export interface JoinQueueAiAction {
   type: typeof QueueActionTypes.JOIN_QUEUE_AI;
+  payload: {
+    difficulty: AIDifficulties;
+  };
 }
 
 export interface QueueErrorAction {

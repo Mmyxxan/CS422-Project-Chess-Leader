@@ -58,13 +58,15 @@ public class QueueController {
         simpMessagingTemplate.convertAndSend("/queue/personal/" + login, message);
     }
 
+    // AI part, note: now we have the para AIDifficulty, but we don't use it yet
     @PostMapping(value = "/queue/with-ai")
     public ResponseEntity<GameFoundMessage> playWithAi(@RequestBody User user) {
         UUID gameId = UUID.randomUUID();
         GameFoundMessage gameFoundMessage = new GameFoundMessage(new GameFoundPayload(gameId.toString()));
         ArrayList<User> users = new ArrayList<>();
         users.add(user);
-        users.add(new User("Computer", "Computer"));
+
+        users.add(new User("Computer", "Computer", user.getDifficulty()));
         kafkaService.sendGameFound(gameId, users, true);
         return ResponseEntity.ok(gameFoundMessage);
     }

@@ -24,12 +24,22 @@ public class KafkaService {
     }
 
     public void sendGameFound(UUID gameId, ArrayList<User> users, boolean withAi) {
+        StartGameMessage.StartGameMessageBuilder messageBuilder = StartGameMessage
+                .builder()
+                .gameId(gameId)
+                .users(users)
+                .withAi(withAi);
+        
+        // Add AI difficulty only for AI games
+        if (withAi) {
+            messageBuilder.aiDifficulty(users.get(1).getDifficulty());
+        }
+        
         Message<StartGameMessage> message = MessageBuilder
-                .withPayload(StartGameMessage
-                        .builder().gameId(gameId)
-                        .users(users).withAi(withAi).build())
-                .setHeader(KafkaHeaders.TOPIC, KAFKA_START_GAME_TOPIC).build();
-
+                .withPayload(messageBuilder.build())
+                .setHeader(KafkaHeaders.TOPIC, KAFKA_START_GAME_TOPIC)
+                .build();
+        
         kafkaTemplate.send(message);
     }
 

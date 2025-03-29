@@ -13,6 +13,10 @@ log = logging.getLogger(__name__)
 
 coloredlogs.install(level='INFO')  # Change this to DEBUG to see more info.
 
+continue_train = dotdict({
+    'checkpoint': 1
+})
+
 args = dotdict({
     # 'numIters': 1000,
     'numIters': 800,
@@ -26,9 +30,11 @@ args = dotdict({
     'arenaCompare': 30,
     'cpuct': 1,
 
+    'new_checkpoint': continue_train.checkpoint,
+
     'checkpoint': './temp/',
-    'load_model': False,
-    'load_folder_file': ('./temp/','checkpoint_0.pth.tar'),
+    'load_model': True,
+    'load_folder_file': ('./temp/', f"checkpoint_{continue_train.checkpoint - 1}.pth.tar"),
     # 'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,
 

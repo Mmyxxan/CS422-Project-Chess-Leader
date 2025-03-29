@@ -59,7 +59,9 @@ export function* gameRootSaga(): SagaIterator {
   ]);
 }
 
-export function* reconnectToGameSaga(action: ReconnectToGameRequestedAction) {
+export function* reconnectToGameSaga(
+  action: ReconnectToGameRequestedAction,
+): Generator<any, void, any> {
   const user = yield select(userSelector);
   let gameId;
   try {
@@ -130,7 +132,7 @@ export function* forfeitGameSaga(action: ForfeitGameAction): SagaIterator {
 
 export function* checkIsGamePresentSaga(
   action: CheckIsGamePresentRequestedAction,
-) {
+): Generator<any, void, any> {
   try {
     const user = yield select(userSelector);
     const response = yield call(fetchIsGamePresent, user.login);

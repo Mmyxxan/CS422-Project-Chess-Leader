@@ -4,4 +4,5 @@ export const fakeLocation = {
   state: '',
   hash: '',
   key: '',
+  query: { key: 'value' },
 };

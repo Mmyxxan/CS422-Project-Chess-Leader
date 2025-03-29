@@ -30,7 +30,7 @@ import { generateErrorMessage } from '../../utils/generateErrorMessage';
 import { leaveQueue } from '../queue/queue.actions';
 import { clearMatchHistory } from '../matchHistory/matchHistory.actions';
 
-export function* userRootSaga() {
+export function* userRootSaga(): Generator<any, void, any> {
   yield all([
     yield takeEvery(UserActionTypes.LOGIN_USER_REQUESTED, loginUserSaga),
     yield takeEvery(UserActionTypes.REGISTER_USER_REQUESTED, registerUserSaga),
@@ -39,7 +39,9 @@ export function* userRootSaga() {
   ]);
 }
 
-export function* loginUserSaga(action: LoginUserRequestedAction) {
+export function* loginUserSaga(
+  action: LoginUserRequestedAction,
+): Generator<any, void, any> {
   try {
     const response = yield call(fetchLoginUser, action.payload.user);
     Cookies.set('token', response.data.token, { expires: 7 });
@@ -57,7 +59,9 @@ export function* loginUserSaga(action: LoginUserRequestedAction) {
   }
 }
 
-export function* registerUserSaga(action: RegisterUserRequestedAction) {
+export function* registerUserSaga(
+  action: RegisterUserRequestedAction,
+): Generator<any, void, any> {
   try {
     const response = yield call(fetchRegisterUser, action.payload.user);
     Cookies.set('token', response.data.token, { expires: 7 });
@@ -75,7 +79,7 @@ export function* registerUserSaga(action: RegisterUserRequestedAction) {
   }
 }
 
-export function* authenticateUserSaga() {
+export function* authenticateUserSaga(): Generator<any, void, any> {
   try {
     const token = Cookies.get('token');
     if (!token) {
@@ -91,7 +95,9 @@ export function* authenticateUserSaga() {
   }
 }
 
-export function* logoutSaga(action: LogoutUserAction) {
+export function* logoutSaga(
+  action: LogoutUserAction,
+): Generator<any, void, any> {
   Cookies.remove('token');
   yield put(push(Routes.logout));
   yield put(closeChat());

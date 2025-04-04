@@ -8,3 +8,6 @@ from .ChessLogic import Board
 from .ChessGame import ChessGame
 from .ChessPlayers import *
 from .pytorch import NNet
+from .draw_special_rules.FiftyMoveRule import FiftyMoveRule
+from .draw_special_rules.InsufficientMaterialRule import InsufficientMaterialRule
+from .draw_special_rules.ThreeRepetitionRule import ThreeRepetitionRule

@@ -79,7 +79,9 @@ class MCTS():
         if self.Es[s] != 0:
             # terminal node
             return -self.Es[s]
-        if i >= self.game.STEP_LIMIT:
+        if i >= self.game.ROLL_OUT_LIMIT:
+            # for row in canonicalBoard:
+            #     print(" ".join(str(piece) for piece in row))
             return 1e-4
 
         if s not in self.Ps:

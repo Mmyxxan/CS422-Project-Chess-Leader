@@ -166,7 +166,7 @@ class King(ChessPiece):
         # Mark King as moved (castling is no longer possible)
         self.has_moved = True
 
-        return board, None
+        return board, target_piece if target_piece.piece_type != PieceType.NONE else None
     
     def get_valid_moves_without_check(self, board, last_move=None):
         return self.get_action_mask(board, last_move)

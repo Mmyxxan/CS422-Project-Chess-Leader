@@ -52,10 +52,17 @@ class MoveDirection73:
     @classmethod
     def get(self, index: int):
         return self.directions[index]
+    # @classmethod
+    # def index(self, dr: int, dc: int):
+    #     """Returns the first index matching the given delta."""
+    #     return self.directions.index((dr, dc))
     @classmethod
-    def index(self, dr: int, dc: int):
-        """Returns the first index matching the given delta."""
-        return self.directions.index((dr, dc))
+    def index(self, dr: int, dc: int) -> int:
+        """Returns the index matching the given delta, or -1 if not found."""
+        try:
+            return self.directions.index((dr, dc))
+        except ValueError:
+            return -1
     @classmethod
     def all(self):
         return self.directions
@@ -155,20 +162,28 @@ class ChessPiece:
             for j in range(size):
                 if board[i][j].piece_type != PieceType.KING and board[i][j].piece_type != PieceType.NONE and board[i][j].color != king.color:
                     mask = board[i][j].get_valid_moves_without_check(board, last_move)
-                    for index in range(len(mask)):
-                        if mask[index]:
-                            move = MoveDirection73.translate_move(board[i][j], index)
-                            if move[0] == king.row and move[1] == king.column:
-                                return True
+                    dr, dc = king.row - board[i][j].row, king.column - board[i][j].column
+                    action = MoveDirection73.index(dr, dc)
+                    if action != -1 and mask[action]:
+                        return True
+                    # for index in range(len(mask)):
+                    #     if mask[index]:
+                    #         move = MoveDirection73.translate_move(board[i][j], index)
+                    #         if move[0] == king.row and move[1] == king.column:
+                    #             return True
                 elif board[i][j].piece_type == PieceType.KING and board[i][j].color != king.color:
                     opponent_king = board[i][j]
                     if opponent_king.has_moved:
                         mask = opponent_king.get_valid_moves_without_check(board, last_move)
-                        for index in range(len(mask)):
-                            if mask[index]:
-                                move = MoveDirection73.translate_move(opponent_king, index)
-                                if move[0] == king.row and move[1] == king.column:
-                                    return True
+                        dr, dc = king.row - opponent_king.row, king.column - opponent_king.column
+                        action = MoveDirection73.index(dr, dc)
+                        if action != -1 and mask[action]:
+                            return True
+                        # for index in range(len(mask)):
+                        #     if mask[index]:
+                        #         move = MoveDirection73.translate_move(opponent_king, index)
+                        #         if move[0] == king.row and move[1] == king.column:
+                        #             return True
         return False
                 
     def is_king_in_check(self, board, king, last_move=None):
@@ -177,11 +192,15 @@ class ChessPiece:
             for j in range(size):
                 if board[i][j].piece_type != PieceType.NONE and board[i][j].color != king.color:
                     mask = board[i][j].get_valid_moves_without_check(board, last_move)
-                    for index in range(len(mask)):
-                        if mask[index]:
-                            move = MoveDirection73.translate_move(board[i][j], index)
-                            if move[0] == king.row and move[1] == king.column:
-                                return True
+                    dr, dc = king.row - board[i][j].row, king.column - board[i][j].column
+                    action = MoveDirection73.index(dr, dc)
+                    if action != -1 and mask[action]:
+                        return True
+                    # for index in range(len(mask)):
+                    #     if mask[index]:
+                    #         move = MoveDirection73.translate_move(board[i][j], index)
+                    #         if move[0] == king.row and move[1] == king.column:
+                    #             return True
         return False
     
     def is_legal_move_for_castling(self, board, new_row, new_col):
@@ -268,7 +287,8 @@ class ChessPiece:
             # Kill target piece
             target_piece.die()
             # Clear old position
-            board[self.row][self.column] = ChessPiece()
+            # board[self.row][self.column] = ChessPiece()
+            ChessPiece().place_piece(board, self.row, self.column)
             # Move the rook
             self.row, self.column = new_row, new_col
             board[new_row][new_col] = self  # Place piece in new position

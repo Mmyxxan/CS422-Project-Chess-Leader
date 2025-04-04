@@ -71,8 +71,8 @@ class Queen(ChessPiece):
         size = len(board)
         mask = [0] * 73
 
-        # Bishop uses sliding indices 28–55 → 4 diagonal directions × 7 steps
-        for base in range(28, 56, 7):  # (28, 35, 42, 49)
+        # Queen uses sliding indices 0–55 → 8 directions × 7 steps
+        for base in range(0, 56, 7):  # (0, 7, 14, 21, 28, 35, 42, 49)
             for offset in range(7):   # Up to 7 steps in each direction
                 i = base + offset
                 dr, dc = MoveDirection73.get(i)

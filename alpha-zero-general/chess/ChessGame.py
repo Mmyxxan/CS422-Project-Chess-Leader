@@ -17,7 +17,8 @@ class ChessGame(Game):
 
     def __init__(self):
         # self.step = 0
-        self.STEP_LIMIT = 150
+        self.STEP_LIMIT = 1000
+        self.ROLL_OUT_LIMIT = 250
         pass
 
     def getInitBoard(self):

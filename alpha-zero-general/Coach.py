@@ -26,6 +26,7 @@ class Coach():
         self.pnet = self.nnet.__class__(self.game)  # the competitor network
         self.args = args
         self.mcts = MCTS(self.game, self.nnet, self.args)
+        self.player = [] 
         self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
 
@@ -63,8 +64,8 @@ class Coach():
             action = np.random.choice(len(pi), p=pi)
             board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action) 
 
-            # print(episodeStep) 
-            
+            print(episodeStep) 
+
             # for row in board:
             #     print(" ".join(str(piece) for piece in row))
 
@@ -72,6 +73,8 @@ class Coach():
 
             if r != 0:
                 print(r)
+                # for row in board:
+                #     print(" ".join(str(piece) for piece in row))
                 return [(x[0], x[2], r * ((-1) ** (x[1] != self.curPlayer))) for x in trainExamples]
 
     def learn(self):

@@ -169,13 +169,15 @@ class Pawn(ChessPiece):
             # After the first move, pawns cannot move by 2 steps
             self.move_directions = [(self.direction, 0)]  # Normal move
             self.has_moved = True
+        else:
+            print("ERROR on PAWN!")
 
         # Promote when come to the other side of the board
         if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
             self.promote(board, promoted_piece)
 
-        # return board, target_piece if target_piece.piece_type != PieceType.NONE else None
-        return board, None
+        return board, target_piece if target_piece.piece_type != PieceType.NONE else None
+        # return board, None
 
     def promote(self, board, new_type):
         """
@@ -236,13 +238,13 @@ class Pawn(ChessPiece):
 
             # ---- PROMOTIONS (indices 64–72) ----
             if i in MoveDirection73.get_promotion_indices():
-                # Valid only if we're promotable
-                if not self.is_promotable(new_row):
-                    continue
-
                 dr, dc = self.direction, MoveDirection73.get(i)[1]
                 new_row = self.row + dr
                 new_col = self.column + dc
+
+                # Valid only if we're promotable
+                if not self.is_promotable(new_row):
+                    continue
 
                 if not (0 <= new_row < size and 0 <= new_col < size):
                     continue
@@ -267,8 +269,13 @@ class Pawn(ChessPiece):
             # ---- TWO-STEP FROM STARTING ROW ----
             if dr == 2 * self.direction and dc == 0:
                 mid_row = self.row + self.direction
-                if ((self.color == PieceColor.WHITE and self.row == 6) or 
-                    (self.color == PieceColor.BLACK and self.row == 1)) and \
+                # if ((self.color == PieceColor.WHITE and self.row == 6) or 
+                #     (self.color == PieceColor.BLACK and self.row == 1)) and \
+                #    board[mid_row][self.column].piece_type == PieceType.NONE and \
+                #    target.piece_type == PieceType.NONE:
+                #     mask[i] = 1
+                #     continue
+                if not self.has_moved and \
                    board[mid_row][self.column].piece_type == PieceType.NONE and \
                    target.piece_type == PieceType.NONE:
                     mask[i] = 1

@@ -8,6 +8,9 @@ from .pieces.Knight import Knight
 from .pieces.Queen import Queen
 from .pieces.Rook import Rook
 from enum import Enum
+from .draw_special_rules.FiftyMoveRule import FiftyMoveRule
+from .draw_special_rules.InsufficientMaterialRule import InsufficientMaterialRule
+from .draw_special_rules.ThreeRepetitionRule import ThreeRepetitionRule
 
 class GameState(Enum):
     IN_PROGRESS = 0
@@ -26,6 +29,7 @@ class Board:
         self.state = (GameState.IN_PROGRESS, PieceColor.NONE)
         self.board = [[ChessPiece() for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
         self.last_move = None
+        self.draw_rules = [FiftyMoveRule(), ThreeRepetitionRule(), InsufficientMaterialRule()]
         self.initialize_board()
 
     def initialize_board(self):
@@ -127,14 +131,22 @@ class Board:
         self.last_move = (piece, (piece.row, piece.column), (new_row, new_col))
         # Execute the move
         # print(piece, piece.row, piece.column, new_row, new_col)
-        piece.execute_move(self.board, new_row, new_col, self.last_move, promoted_piece)
+        _, target_piece = piece.execute_move(self.board, new_row, new_col, self.last_move, promoted_piece)
+        # Update information for draw rules
+        violate_draw_rule = False
+        for i in range(len(self.draw_rules)):
+            self.draw_rules[i].update(self, target_piece, piece.piece_type)
+            if self.draw_rules[i].violate_rule() == True:
+                print(self.draw_rules[i])
+                violate_draw_rule = True
+                break
         # Update the game state
         king = piece.find_king(self.board, PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK)
         if piece.is_king_in_check(self.board, king, self.last_move):
             self.state = (GameState.CHECK, PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK)
             if not self.has_legal_moves(PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK):
                 self.state = (GameState.CHECKMATE, PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK)
-        elif not self.has_legal_moves(PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK):
+        elif violate_draw_rule or not self.has_legal_moves(PieceColor.WHITE if piece.color == PieceColor.BLACK else PieceColor.BLACK):
             self.state = (GameState.STALEMATE, PieceColor.NONE)
         else:
             self.state = (GameState.IN_PROGRESS, PieceColor.NONE)
@@ -177,3 +189,15 @@ class Board:
     
     def is_in_progress(self):
         return self.state[0] == GameState.IN_PROGRESS or self.state[0] == GameState.CHECK
+    
+    def string_of_state_and_valid_moves(self):
+        # Get the board state as a tuple of tuples
+        board_state = tuple(tuple(str(piece) if piece != '.' else '.' for piece in row) for row in self.get_board_matrix())
+        
+        # Get the valid moves as a flattened tuple of valid moves (0 or 1)
+        valid_moves_matrix = self.get_legal_moves()
+        valid_moves_tuple = tuple(int(move) for move in valid_moves_matrix)  # Flatten and convert to int
+        
+        # Return the tuple with board state and valid moves
+        return (board_state, valid_moves_tuple)
+

@@ -3,6 +3,34 @@ import math
 
 import numpy as np
 
+import torch
+import chess
+from alpha_zero_chess.Dataset import PIECE_PLANES
+from .move_index import *
+
+def encode_board(board: chess.Board) -> torch.Tensor:
+    """Encode a chess.Board into a (16, 8, 8) tensor."""
+    tensor = np.zeros((16, 8, 8), dtype=np.float32)
+    
+    # Pieces
+    for square, piece in board.piece_map().items():
+        row = 7 - (square // 8)
+        col = square % 8
+        plane = PIECE_PLANES[piece.symbol()]
+        tensor[plane, row, col] = 1.0
+
+    # Castling rights
+    tensor[12][:][:] = 1.0 if board.has_kingside_castling_rights(chess.WHITE) else 0.0
+    tensor[13][:][:] = 1.0 if board.has_kingside_castling_rights(chess.BLACK) else 0.0
+
+    # Move count (normalize)
+    tensor[14][:][:] = board.fullmove_number / 100.0
+
+    # Side to move
+    tensor[15][:][:] = 1.0
+
+    return torch.tensor(tensor)
+
 EPS = 1e-8
 
 log = logging.getLogger(__name__)
@@ -35,25 +63,24 @@ class MCTS():
                    proportional to Nsa[(s,a)]**(1./temp)
         """
         for i in range(self.args.numMCTSSims):
-            # print("New sim")
-            self.search(canonicalBoard, 0)
+            self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
 
-        if temp == 0: # As the temp is cooling down, only allow optimal moves
+        if temp == 0:
             bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
             bestA = np.random.choice(bestAs)
             probs = [0] * len(counts)
             probs[bestA] = 1
             return probs
 
-        counts = [x ** (1. / temp) for x in counts] # soft pick of action for stochastic property
+        counts = [x ** (1. / temp) for x in counts]
         counts_sum = float(sum(counts))
         probs = [x / counts_sum for x in counts]
         return probs
 
-    def search(self, canonicalBoard, i):
+    def search(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -73,41 +100,34 @@ class MCTS():
             v: the negative of the value of the current canonicalBoard
         """
 
-        # print("Old board")
-        # for row in canonicalBoard:
-        #     print(" ".join(str(piece) for piece in row))
-
         s = self.game.stringRepresentation(canonicalBoard)
 
         if s not in self.Es:
-            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1, None)
+            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
         if self.Es[s] != 0:
             # terminal node
             return -self.Es[s]
-        if i >= self.game.ROLL_OUT_LIMIT:
-            return 1e-4
 
         if s not in self.Ps:
             # leaf node
-            self.Ps[s], v = self.nnet.predict(canonicalBoard)
             valids = self.game.getValidMoves(canonicalBoard, 1)
-            self.Ps[s] = self.Ps[s] * valids  # masking invalid moves
-            sum_Ps_s = np.sum(self.Ps[s])
-            if sum_Ps_s > 0:
-                self.Ps[s] /= sum_Ps_s  # renormalize
-            else:
-                # if all valid moves were masked make all valid moves equally probable
+            board_tensor = encode_board(canonicalBoard)
+            self.Ps[s], v = self.nnet.predict(board_tensor, valids)
+            # self.Ps[s] = self.Ps[s] * valids  # masking invalid moves
+            # sum_Ps_s = np.sum(self.Ps[s])
+            # if sum_Ps_s > 0:
+            #     self.Ps[s] /= sum_Ps_s  # renormalize
+            # else:
+            #     # if all valid moves were masked make all valid moves equally probable
 
-                # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
-                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.   
-                log.error("All valid moves were masked, doing a workaround.")
-                self.Ps[s] = self.Ps[s] + valids
-                self.Ps[s] /= np.sum(self.Ps[s])
+            #     # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
+            #     # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.   
+            #     log.error("All valid moves were masked, doing a workaround.")
+            #     self.Ps[s] = self.Ps[s] + valids
+            #     self.Ps[s] /= np.sum(self.Ps[s])
 
             self.Vs[s] = valids
             self.Ns[s] = 0
-            # for row in canonicalBoard:
-            #     print(" ".join(str(piece) for piece in row))
             return -v
 
         valids = self.Vs[s]
@@ -128,15 +148,10 @@ class MCTS():
                     best_act = a
 
         a = best_act
-        # print(a)
         next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
         next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        # print("New board")
-        # for row in canonicalBoard:
-        #     print(" ".join(str(piece) for piece in row))
-
-        v = self.search(next_s, i + 1)
+        v = self.search(next_s)
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)

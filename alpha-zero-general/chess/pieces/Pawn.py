@@ -173,7 +173,8 @@ class Pawn(ChessPiece):
             print("ERROR on PAWN!")
 
         # Promote when come to the other side of the board
-        if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
+        if (self.row == 0) or (self.row == 7):
+        # if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
             self.promote(board, promoted_piece)
 
         return board, target_piece if target_piece.piece_type != PieceType.NONE else None
@@ -186,8 +187,11 @@ class Pawn(ChessPiece):
         """
         if new_type == PieceType.KING:
             raise ValueError("Pawns cannot be promoted to a King!")
+        
+        # print("promote ", self.color, self.row)
 
-        if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
+        # if (self.color == PieceColor.WHITE and self.row == 0) or (self.color == PieceColor.BLACK and self.row == 7):
+        if (self.row == 0) or (self.row == 7):
             # Determine the new piece
             if new_type == PieceType.QUEEN:
                 # self.piece_type = PieceType.QUEEN

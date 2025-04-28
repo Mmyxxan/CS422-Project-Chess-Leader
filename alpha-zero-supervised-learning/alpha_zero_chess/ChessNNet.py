@@ -126,8 +126,8 @@ class ChessNNet:
                 policy_exp = torch.exp(policy_logits)
                 policy_exp *= policy_mask
                 policy_sum = torch.sum(policy_exp, dim=1, keepdim=True)
-                # policy_softmax = policy_exp / (policy_sum + 1e-8)  # avoid div by 0
-                policy_softmax = policy_exp / policy_sum
+                policy_softmax = policy_exp / (policy_sum + 1e-8)  # avoid div by 0
+                # policy_softmax = policy_exp / policy_sum
                 return policy_softmax.squeeze(0).cpu().numpy(), value.item()
             else:
                 return torch.softmax(policy_logits, dim=1).squeeze(0).cpu().numpy(), value.item()
@@ -144,4 +144,5 @@ class ChessNNet:
             raise FileNotFoundError(f"No model found at {filepath}")
         checkpoint = torch.load(filepath, map_location='cuda' if self.args['cuda'] else 'cpu')
         self.nnet.load_state_dict(checkpoint['state_dict'])
+        # self.nnet.load_state_dict(checkpoint)
         print(f"✅ Model loaded from {filepath}")

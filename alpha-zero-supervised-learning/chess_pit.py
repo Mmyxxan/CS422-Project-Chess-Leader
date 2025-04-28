@@ -13,7 +13,7 @@ g = ChessGame()
 
 # all players
 rp1 = AlphaZeroPlayer(g).play
-rp2 = HumanChessPlayer(g).play
+rp2 = AlphaZeroPlayer(g).play
 
 if cpu_vs_cpu:
     player2 = rp2

@@ -12,8 +12,8 @@ class NNet(nn.Module):
     - 
     """
     INPUT_CHANNELS = 16
-    NUM_FILTERS = 128
-    NUM_RESIDUAL_BLOCKS = 10
+    NUM_FILTERS = 256
+    NUM_RESIDUAL_BLOCKS = 20
 
     def __init__(self):
         super().__init__()

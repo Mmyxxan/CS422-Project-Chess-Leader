@@ -15,7 +15,8 @@ args = dotdict({
     'max_games_debugging': 20
 })
 
-dataset = PGNDataset("D:/y3t2/CCRL-404.[1542299].pgn/CCRL.pgn", max_games=args['max_games_debugging'])
+# dataset = PGNDataset("D:/y3t2/CCRL-404.[1542299].pgn/CCRL.pgn", max_games=args['max_games_debugging'])
+dataset = PGNDataset("D:/y3t2/ccrl-pgn/cclr/train/1.pgn", max_games=args['max_games_debugging'])
 train_size = int(0.9 * len(dataset))
 val_size = len(dataset) - train_size
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])

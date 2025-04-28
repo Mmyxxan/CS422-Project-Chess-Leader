@@ -8,7 +8,8 @@ from .MCTS import MCTS
 
 nnet_args = dotdict({
     'best_model_folder': 'D:/y3t2/alpha-zero-general-master (3)/core-game-training/alpha-zero-supervised-learning/model/',
-    'best_model_filename': 'best_model.pth',
+    'best_model_filename': 'best_model_20x256.pth',
+    # 'best_model_filename': 'AlphaZeroNet_20x256.pt',
     'epochs': 40,
     'batch_size': 64,
     'cuda': torch.cuda.is_available(),

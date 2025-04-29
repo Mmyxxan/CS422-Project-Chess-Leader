@@ -85,6 +85,8 @@ public class Game {
 
     public void makeAiMove(PlayerMovePayload playerMovePayload, Player player) throws GameException {
         makeMove(playerMovePayload, player);
+        // print FEN string for debugging
+        System.out.println(board.getFenString(getCurrentPlayerColor()));
 
         if (board.getPositionAwaitingPromotion() != null) {
             makePromotion(playerMovePayload.getDestinationPosition(), player, PieceType.QUEEN);
@@ -148,7 +150,6 @@ public class Game {
         }
         setGamePhase(GamePhase.GAME_OVER);
     }
-
 
     @JsonIgnore
     public Duration getGameDuration() {

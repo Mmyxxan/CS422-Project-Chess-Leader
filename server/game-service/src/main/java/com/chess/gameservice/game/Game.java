@@ -174,4 +174,8 @@ public class Game {
     public void beforeDestroy() {
         players.beforeDestroy();
     }
+
+    public String getFenString() {
+        return board.getFenString(getCurrentPlayerColor());
+    }
 }

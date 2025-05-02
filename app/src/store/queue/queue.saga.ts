@@ -32,7 +32,7 @@ import { queueGameFound } from './queue.actions';
 import { generateErrorMessage } from '../../utils/generateErrorMessage';
 import { SagaIterator } from 'redux-saga';
 
-export function* queueRootSaga() {
+export function* queueRootSaga(): Generator<any, void, any> {
   yield all([
     yield takeEvery(QueueActionTypes.JOIN_QUEUE, joinQueueSaga),
     yield takeEvery(QueueActionTypes.QUEUE_GAME_FOUND, queueGameFoundSaga),
@@ -82,7 +82,9 @@ export function* leaveQueueSaga(action: LeaveQueueAction) {
   });
 }
 
-export function* joinQueueAiSaga(action: JoinQueueAiAction) {
+export function* joinQueueAiSaga(
+  action: JoinQueueAiAction,
+): Generator<any, void, any> {
   const { login } = yield select(userSelector);
   try {
     const response = yield call(fetchJoinQueueAi, login);

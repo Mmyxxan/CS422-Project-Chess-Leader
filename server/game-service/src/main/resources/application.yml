@@ -25,6 +25,10 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
+ai:
+  chess:
+    move-url: http://host.docker.internal:5000/move
+
 ---
 
 spring:

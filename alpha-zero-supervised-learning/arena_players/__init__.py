@@ -1,0 +1,1 @@
+from .ChessPlayers import AlphaZeroPlayer, nnet_args, args

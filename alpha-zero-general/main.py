@@ -13,6 +13,10 @@ log = logging.getLogger(__name__)
 
 coloredlogs.install(level='INFO')  # Change this to DEBUG to see more info.
 
+continue_train = dotdict({
+    'checkpoint': 1
+})
+
 args = dotdict({
     'numIters': 1000,
     'numEps': 100,              # Number of complete self-play games to simulate during a new iteration.
@@ -23,9 +27,12 @@ args = dotdict({
     'arenaCompare': 40,         # Number of games to play during arena play to determine if new net will be accepted.
     'cpuct': 1,
 
+    'new_checkpoint': continue_train.checkpoint,
+
     'checkpoint': './temp/',
-    'load_model': False,
-    'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
+    'load_model': True,
+    'load_folder_file': ('./temp/', f"checkpoint_{continue_train.checkpoint - 1}.pth.tar"),
+    # 'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,
 
 })
@@ -40,8 +47,10 @@ def main():
     nnet = nn(g)
 
     if args.load_model:
-        log.info('Loading checkpoint "%s/%s"...', args.load_folder_file[0], args.load_folder_file[1])
-        nnet.load_checkpoint(args.load_folder_file[0], args.load_folder_file[1])
+        log.info('Loading checkpoint "%s%s"...', args.checkpoint, 'temp.pth.tar')
+        nnet.load_checkpoint(folder=args.checkpoint, filename='temp.pth.tar')
+        # log.info('Loading checkpoint "%s/%s"...', args.load_folder_file[0], args.load_folder_file[1])
+        # nnet.load_checkpoint(args.load_folder_file[0], args.load_folder_file[1])
     else:
         log.warning('Not loading a checkpoint!')
 

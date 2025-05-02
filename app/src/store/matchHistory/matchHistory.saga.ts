@@ -30,7 +30,9 @@ export function* matchHistoryRootSaga(): SagaIterator {
   ]);
 }
 
-export function* getMatchHistorySaga(action: GetMatchHistoryRequestedAction) {
+export function* getMatchHistorySaga(
+  action: GetMatchHistoryRequestedAction,
+): Generator<any, void, any> {
   try {
     const response = yield call(fetchGetMatchHistory, action.payload.login);
     yield put(getMatchHistorySucceeded(response.data));
@@ -42,7 +44,9 @@ export function* getMatchHistorySaga(action: GetMatchHistoryRequestedAction) {
   }
 }
 
-export function* getMatchDetailsSaga(action: GetMatchDetailsRequestedAction) {
+export function* getMatchDetailsSaga(
+  action: GetMatchDetailsRequestedAction,
+): Generator<any, void, any> {
   try {
     const response = yield call(fetchGetMatchDetails, action.payload.gameId);
     yield put(getMatchDetailsSucceeded(response.data));

@@ -19,10 +19,12 @@ module.exports = env => ({
   devtool: env.development && 'eval-source-map',
   devServer: {
     contentBase: [path.join(__dirname, 'public')],
+    host: '0.0.0.0',           // ← listen on all interfaces
     hot: true,
     open: false,
     port: 3000,
     historyApiFallback: true,
+    allowedHosts: ['all'],      // ← if you run into host-check errors
   },
   module: {
     rules: [

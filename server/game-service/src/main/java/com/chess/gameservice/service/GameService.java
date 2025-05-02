@@ -4,6 +4,7 @@ import com.chess.gameservice.dto.AiMoveResponse;
 import com.chess.gameservice.exception.GameException;
 import com.chess.gameservice.game.Game;
 import com.chess.gameservice.game.GamePhase;
+import com.chess.gameservice.game.ai.AIDifficulty;
 import com.chess.gameservice.game.ai.MinMax;
 import com.chess.gameservice.game.move.PlayerMove;
 import com.chess.gameservice.game.piece.PieceType;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 
 @Service
 public class GameService {
@@ -129,7 +129,8 @@ public class GameService {
         return game;
     }
 
-    public Game makePromotion(UUID gameId, Position playerMove, PieceType selectedPromotion, String playerName) throws GameException {
+    public Game makePromotion(UUID gameId, Position playerMove, PieceType selectedPromotion, String playerName)
+            throws GameException {
         Game game = games.get(gameId);
         Player player = new Player(playerName);
         game.makePromotion(playerMove, player, selectedPromotion);
@@ -146,28 +147,47 @@ public class GameService {
         return game;
     }
 
-    public Game makeAiMove(UUID gameId) throws GameException {
+    public Game makeAiMove(UUID gameId, AIDifficulty aiDifficulty) throws GameException {
         Game game = games.get(gameId);
-        if (game == null) return null;
+        if (game == null)
+            return null;
 
         if (game.getBoard().getPositionAwaitingPromotion() == null) {
             // build the JSON payload
-            Map<String,String> payload = Map.of(
-                "fen",        game.getFenString(),
-                "difficulty", "easy"
-            );
+            Map<String, String> payload;
+            switch (game.getAiDifficulty()) {
+                case EASY:
+                    payload = Map.of(
+                            "fen", game.getFenString(),
+                            "difficulty", "easy");
+                    break;
+                case NORMAL:
+                    payload = Map.of(
+                            "fen", game.getFenString(),
+                            "difficulty", "normal");
+                    break;
+                case HARD:
+                    payload = Map.of(
+                            "fen", game.getFenString(),
+                            "difficulty", "hard");
+                    break;
+                default:
+                    payload = Map.of(
+                            "fen", game.getFenString(),
+                            "difficulty", "easy");
+                    break;
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String,String>> entity = new HttpEntity<>(payload, headers);
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(payload, headers);
 
             // do the call
             ResponseEntity<AiMoveResponse> response = rest.exchange(
-                aiMovelUrl,
-                HttpMethod.POST,
-                entity,
-                AiMoveResponse.class
-            );
+                    aiMovelUrl,
+                    HttpMethod.POST,
+                    entity,
+                    AiMoveResponse.class);
 
             // log response
             if (response.getStatusCode() != HttpStatus.OK) {
@@ -181,13 +201,11 @@ public class GameService {
 
             var moveDto = aiMove.getPlayerMove();
             Position from = new Position(
-                moveDto.getInitialPosition().getX(),
-                moveDto.getInitialPosition().getY()
-            );
+                    moveDto.getInitialPosition().getX(),
+                    moveDto.getInitialPosition().getY());
             Position to = new Position(
-                moveDto.getDestinationPosition().getX(),
-                moveDto.getDestinationPosition().getY()
-            );
+                    moveDto.getDestinationPosition().getX(),
+                    moveDto.getDestinationPosition().getY());
 
             game.makeAiMove(new PlayerMovePayload(from, to), new Player("Computer"));
         }
@@ -209,7 +227,6 @@ public class GameService {
         });
         gamesToRemove.forEach(this::gameFinished);
     }
-
 
     public synchronized void gameFinished(UUID gameId) {
         Game game = games.get(gameId);

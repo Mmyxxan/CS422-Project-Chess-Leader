@@ -60,7 +60,7 @@ public class GameController implements ApplicationListener<PlayerOutOfTimeEvent>
 
     public void makeMoveAi(String gameId, AIDifficulty aiDifficulty ) throws GameException {
          // switch case the mode according to the difficulty
-        Game game = gameService.makeAiMove(UUID.fromString(gameId));
+        Game game = gameService.makeAiMove(UUID.fromString(gameId), aiDifficulty);
         if (game != null) {
             PlayerMovedMessage playerMovedMessage = new PlayerMovedMessage();
             playerMovedMessage.setPayload(game);

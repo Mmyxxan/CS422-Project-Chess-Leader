@@ -3,6 +3,7 @@ package com.chess.gameservice.service;
 import com.chess.gameservice.exception.GameException;
 import com.chess.gameservice.game.Game;
 import com.chess.gameservice.game.GamePhase;
+import com.chess.gameservice.game.ai.AIDifficulty;
 import com.chess.gameservice.game.piece.Pawn;
 import com.chess.gameservice.game.piece.PieceType;
 import com.chess.gameservice.game.player.PlayerColor;
@@ -144,7 +145,7 @@ class GameServiceTest {
         PlayerMovePayload playerMove = new PlayerMovePayload(initialPosition, destinationPosition);
         gameService.makeMove(gameId, playerMove, firstPlayerName);
 
-        Game game = gameService.makeAiMove(gameId);
+        Game game = gameService.makeAiMove(gameId, AIDifficulty.EASY);
 
         assertEquals(2, game.getCurrentTurn().getTurnNumber());
     }

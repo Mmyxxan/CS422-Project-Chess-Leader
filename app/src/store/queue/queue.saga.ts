@@ -86,8 +86,9 @@ export function* joinQueueAiSaga(
   action: JoinQueueAiAction,
 ): Generator<any, void, any> {
   const { login } = yield select(userSelector);
+  const { difficulty } = action.payload;
   try {
-    const response = yield call(fetchJoinQueueAi, login);
+    const response = yield call(fetchJoinQueueAi, login, difficulty);
     yield fork(
       queueGameFoundSaga,
       queueGameFound(response.data.payload.gameId),

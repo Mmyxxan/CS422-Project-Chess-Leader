@@ -111,7 +111,7 @@ class GameControllerTest {
         users.add(u1);
         users.add(u2);
         Message<StartGameMessage> message = MessageBuilder
-                .withPayload(new StartGameMessage(UUID.fromString(gameId), users, false))
+                .withPayload(new StartGameMessage(UUID.fromString(gameId), users, false, null))
                 .setHeader(KafkaHeaders.TOPIC, KAFKA_TOPICS_START_GAME).build();
         template.send(message);
     }

@@ -5,6 +5,8 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import com.chess.gameservice.game.ai.AIDifficulty;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -14,4 +16,5 @@ public class StartGameMessage {
     UUID gameId;
     ArrayList<User> users;
     boolean withAi;
+    AIDifficulty aiDifficulty;
 }

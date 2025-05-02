@@ -101,6 +101,7 @@ public class GameService {
         ArrayList<User> players = message.getUsers();
         game.setGameId(gameId);
         game.setWithAi(message.isWithAi());
+        game.setAiDifficulty(message.getAiDifficulty());
         game.setPlayer(new Player(players.get(0).getLogin()), PlayerColor.WHITE);
         game.setPlayer(new Player(players.get(1).getLogin()), PlayerColor.BLACK);
         game.initGame(gameId);
@@ -149,34 +150,17 @@ public class GameService {
 
     public Game makeAiMove(UUID gameId, AIDifficulty aiDifficulty) throws GameException {
         Game game = games.get(gameId);
-        if (game == null)
-            return null;
+        if (game == null) return null;
+        if (aiDifficulty == null) {
+            throw new GameException("AI difficulty is not set");
+        }
 
         if (game.getBoard().getPositionAwaitingPromotion() == null) {
             // build the JSON payload
-            Map<String, String> payload;
-            switch (game.getAiDifficulty()) {
-                case EASY:
-                    payload = Map.of(
-                            "fen", game.getFenString(),
-                            "difficulty", "easy");
-                    break;
-                case NORMAL:
-                    payload = Map.of(
-                            "fen", game.getFenString(),
-                            "difficulty", "normal");
-                    break;
-                case HARD:
-                    payload = Map.of(
-                            "fen", game.getFenString(),
-                            "difficulty", "hard");
-                    break;
-                default:
-                    payload = Map.of(
-                            "fen", game.getFenString(),
-                            "difficulty", "easy");
-                    break;
-            }
+            Map<String,String> payload = Map.of(
+                "fen",        game.getFenString(),
+                "difficulty", aiDifficulty.toString()
+            );
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -188,6 +172,14 @@ public class GameService {
                     HttpMethod.POST,
                     entity,
                     AiMoveResponse.class);
+
+            // print the response
+            System.out.println("Response from AI service: " + response.getBody());
+            System.out.println("Response status code: " + response.getStatusCode());
+
+            // print the response
+            System.out.println("Response from AI service: " + response.getBody());
+            System.out.println("Response status code: " + response.getStatusCode());
 
             // log response
             if (response.getStatusCode() != HttpStatus.OK) {

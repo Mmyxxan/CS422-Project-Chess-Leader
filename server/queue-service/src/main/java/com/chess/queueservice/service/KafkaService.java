@@ -32,7 +32,7 @@ public class KafkaService {
         
         // Add AI difficulty only for AI games
         if (withAi) {
-            messageBuilder.aiDifficulty(users.get(1).getDifficulty());
+            messageBuilder.aiDifficulty(users.get(0).getDifficulty());
         }
         
         Message<StartGameMessage> message = MessageBuilder

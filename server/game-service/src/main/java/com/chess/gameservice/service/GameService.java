@@ -173,14 +173,6 @@ public class GameService {
                     entity,
                     AiMoveResponse.class);
 
-            // print the response
-            System.out.println("Response from AI service: " + response.getBody());
-            System.out.println("Response status code: " + response.getStatusCode());
-
-            // print the response
-            System.out.println("Response from AI service: " + response.getBody());
-            System.out.println("Response status code: " + response.getStatusCode());
-
             // log response
             if (response.getStatusCode() != HttpStatus.OK) {
                 throw new GameException("AI service returned error: " + response.getStatusCode());

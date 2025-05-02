@@ -5,6 +5,6 @@ export enum GameModes {
 
 export enum AIDifficulties {
   Easy,
-  Normal,
+  Medium,
   Hard,
 }

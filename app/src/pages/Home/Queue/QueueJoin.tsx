@@ -61,7 +61,7 @@ const QueueJoin: React.FC<Props> = ({ joinQueue, joinQueueAi }) => {
           case AIDifficulties.Easy:
             joinQueueAi(selectedAIMode);
             break;
-          case AIDifficulties.Normal:
+          case AIDifficulties.Medium:
             joinQueueAi(selectedAIMode);
             break;
           case AIDifficulties.Hard:
@@ -99,7 +99,7 @@ const QueueJoin: React.FC<Props> = ({ joinQueue, joinQueueAi }) => {
             onChange={handleDifficultyChange}
           >
             <MenuItem value={AIDifficulties.Easy}>Easy</MenuItem>
-            <MenuItem value={AIDifficulties.Normal}>Normal</MenuItem>
+            <MenuItem value={AIDifficulties.Medium}>Medium</MenuItem>
             <MenuItem value={AIDifficulties.Hard}>Hard</MenuItem>
           </Select>
         </StyledFormControl>

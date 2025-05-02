@@ -114,4 +114,7 @@ public abstract class Piece implements Serializable {
 
     public abstract boolean isMoveLegal(Position currentPosition, Position destinationPosition, Board board);
 
+    public boolean isFirstMove() {
+        return isFirstMove;
+    }
 }

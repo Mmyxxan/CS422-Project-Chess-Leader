@@ -1,5 +1,5 @@
 import numpy as np
-from .ChessPiece import PieceType
+from .ChessPiece import PieceType, MoveDirection73
 
 def parse_move(move_str):
     """
@@ -58,23 +58,33 @@ class HumanChessPlayer():
 
             i, j, r, c, promoted_piece = move
 
-            promotion_piece = 0
+            dr, dc = r - i, c - j
 
-            if promoted_piece == 'Q':
-                promotion_piece = 0
-            elif promoted_piece == 'B':
-                promotion_piece = 1
-            elif promoted_piece == 'N':
-                promotion_piece = 2       
-            elif promoted_piece == 'R':
-                promotion_piece = 3     
+            if promoted_piece == 'R' or promoted_piece == 'B' or promoted_piece == 'N':
+                if dc == 0:
+                    base = 64
+                elif dc == -1:
+                    base = 67
+                elif dc == 1:
+                    base = 70
+                if promoted_piece == 'N':
+                    offset = 0
+                elif promoted_piece == 'B':
+                    offset = 1
+                elif promoted_piece == 'R':
+                    offset = 2
+                index = base + offset
+            else:
+                index = MoveDirection73.index(dr, dc)
+
+            # print(index)
 
             # Validate move
-            if not valid[(board_size ** 2) * (board_size * i + j) + board_size * r + c + (8 ** 2) * (8 ** 2) * promotion_piece]:
+            if not valid[(board_size * i + j) * 73 + index]:
                 print("Illegal move. Try again.")
                 continue
             else:
-                a = (board_size ** 2) * (board_size * i + j) + board_size * r + c + (8 ** 2) * (8 ** 2) * promotion_piece
+                a = (board_size * i + j) * 73 + index
                 break
 
         return a

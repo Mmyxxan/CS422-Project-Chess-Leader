@@ -1,5 +1,6 @@
 package com.chess.gameservice.service;
 
+import com.chess.gameservice.dto.AiMoveResponse;
 import com.chess.gameservice.exception.GameException;
 import com.chess.gameservice.game.Game;
 import com.chess.gameservice.game.GamePhase;
@@ -14,16 +15,22 @@ import com.chess.gameservice.messages.external.StartGameMessage;
 import com.chess.gameservice.messages.external.User;
 import com.chess.gameservice.messages.payloads.AvailableMovesPayload;
 import com.chess.gameservice.messages.payloads.PlayerMovePayload;
+
+import org.springframework.http.*;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,9 +41,13 @@ public class GameService {
     private final HashMap<UUID, Game> games = new HashMap<>();
     private final MinMax minMax = new MinMax();
     private final ApplicationEventPublisher applicationEventPublisher;
+    @Value("${ai.chess.move-url}")
+    private String aiMovelUrl;
+    private final RestTemplate rest;
 
-    public GameService(ApplicationEventPublisher applicationEventPublisher) {
+    public GameService(ApplicationEventPublisher applicationEventPublisher, RestTemplate rest) {
         this.applicationEventPublisher = applicationEventPublisher;
+        this.rest = rest;
     }
 
     public Optional<UUID> getGameWithUser(String playerName) {
@@ -137,18 +148,50 @@ public class GameService {
 
     public Game makeAiMove(UUID gameId) throws GameException {
         Game game = games.get(gameId);
-        if (game == null) {
-            return null;
-        }
-        Player player = new Player("Computer");
+        if (game == null) return null;
+
         if (game.getBoard().getPositionAwaitingPromotion() == null) {
-            try {
-                PlayerMove bestMove = minMax.getBestMove(game.getBoard(), game.getCurrentPlayerColor());
-                game.makeAiMove(new PlayerMovePayload(bestMove.getInitialPosition(), bestMove.getDestinationPosition()), player);
-            } catch (GameException exception) {
-                forfeitGame(gameId, player.getName());
+            // build the JSON payload
+            Map<String,String> payload = Map.of(
+                "fen",        game.getFenString(),
+                "difficulty", "easy"
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String,String>> entity = new HttpEntity<>(payload, headers);
+
+            // do the call
+            ResponseEntity<AiMoveResponse> response = rest.exchange(
+                aiMovelUrl,
+                HttpMethod.POST,
+                entity,
+                AiMoveResponse.class
+            );
+
+            // log response
+            if (response.getStatusCode() != HttpStatus.OK) {
+                throw new GameException("AI service returned error: " + response.getStatusCode());
             }
+
+            AiMoveResponse aiMove = response.getBody();
+            if (aiMove == null) {
+                throw new GameException("AI returned empty response");
+            }
+
+            var moveDto = aiMove.getPlayerMove();
+            Position from = new Position(
+                moveDto.getInitialPosition().getX(),
+                moveDto.getInitialPosition().getY()
+            );
+            Position to = new Position(
+                moveDto.getDestinationPosition().getX(),
+                moveDto.getDestinationPosition().getY()
+            );
+
+            game.makeAiMove(new PlayerMovePayload(from, to), new Player("Computer"));
         }
+
         if (game.getGamePhase() == GamePhase.GAME_OVER) {
             gameFinished(gameId);
         }

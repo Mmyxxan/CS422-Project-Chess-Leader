@@ -37,6 +37,9 @@ public class Board implements Serializable{
 
     @JsonIgnore
     Position enPessantPosition;
+    
+    private Integer halfMoveClock = 0;
+    private Integer fullMoveNumber = 1;
 
     public Board() {
         graveyards = new Graveyards();
@@ -167,6 +170,27 @@ public class Board implements Serializable{
 
         addPieceToGraveyardByPosition(destination);
 
+        // update en passant position
+        if (piece instanceof Pawn) {
+            if (Math.abs(initialPosition.getX() - destination.getX()) == 2) {
+                enPessantPosition = new Position((initialPosition.getX() + destination.getX()) / 2, initialPosition.getY());
+            } else {
+                enPessantPosition = null;
+            }
+        } else {
+            enPessantPosition = null;
+        }
+        // update half move clock
+        if (piece instanceof Pawn || !isBoardPositionEmpty(destination)) {
+            halfMoveClock = 0; // reset because of pawn move or capture
+        } else {
+            halfMoveClock++;
+        }
+        // update full move number
+        if (piece.getPlayerColor() == PlayerColor.BLACK) {
+            fullMoveNumber++;
+        }
+
         piece.makeMove(initialPosition, destination, this);
         setCheckState(CheckChecker.getCheckState(this, PlayerColor.getOtherColor(piece.getPlayerColor())));
         return piece;
@@ -202,4 +226,141 @@ public class Board implements Serializable{
         setCheckState(CheckChecker.getCheckState(this, PlayerColor.getOtherColor(piece.getPlayerColor())));
     }
 
+    public boolean whiteCanCastleKingSide() {
+        // check if the king and rook have not moved
+        Piece king = getPieceByPosition(new Position(7, 4));
+        Piece rook = getPieceByPosition(new Position(7, 7));
+        return king != null && rook != null && king.getPlayerColor() == PlayerColor.WHITE && rook.getPlayerColor() == PlayerColor.WHITE &&
+                king.isFirstMove() && rook.isFirstMove();
+    }
+
+    public boolean whiteCanCastleQueenSide() {
+        // check if the king and rook have not moved
+        Piece king = getPieceByPosition(new Position(7, 4));
+        Piece rook = getPieceByPosition(new Position(7, 0));
+        return king != null && rook != null && king.getPlayerColor() == PlayerColor.WHITE && rook.getPlayerColor() == PlayerColor.WHITE &&
+                king.isFirstMove() && rook.isFirstMove();
+    }
+
+    public boolean blackCanCastleKingSide() {
+        // check if the king and rook have not moved
+        Piece king = getPieceByPosition(new Position(0, 4));
+        Piece rook = getPieceByPosition(new Position(0, 7));
+        return king != null && rook != null && king.getPlayerColor() == PlayerColor.BLACK && rook.getPlayerColor() == PlayerColor.BLACK &&
+                king.isFirstMove() && rook.isFirstMove();
+    }
+
+    public boolean blackCanCastleQueenSide() {
+        // check if the king and rook have not moved
+        Piece king = getPieceByPosition(new Position(0, 4));
+        Piece rook = getPieceByPosition(new Position(0, 0));
+        return king != null && rook != null && king.getPlayerColor() == PlayerColor.BLACK && rook.getPlayerColor() == PlayerColor.BLACK &&
+                king.isFirstMove() && rook.isFirstMove();
+    }
+
+    public String getFenString(PlayerColor activeColor) {
+        StringBuilder fen = new StringBuilder();
+    
+        // 1. Piece placement
+        for (int x = 0; x <= BOARD_SIZE; x++) {
+            int emptySquares = 0;
+            for (int y = 0; y <= BOARD_SIZE; y++) {
+                Piece piece = getPieceByPosition(new Position(x, y));
+                if (piece == null) {
+                    emptySquares++;
+                } else {
+                    if (emptySquares > 0) {
+                        fen.append(emptySquares);
+                        emptySquares = 0;
+                    }
+                    fen.append(getFenSymbol(piece));
+                }
+            }
+            if (emptySquares > 0) {
+                fen.append(emptySquares);
+            }
+            if (x != BOARD_SIZE) {
+                fen.append('/');
+            }
+        }
+    
+        // 2. Active color
+        fen.append(' ');
+        fen.append(activeColor == PlayerColor.WHITE ? 'w' : 'b');
+    
+        // 3. Castling rights
+        fen.append(' ');
+        boolean hasCastlingRights = false;
+        if (whiteCanCastleKingSide()) {
+            fen.append('K');
+            hasCastlingRights = true;
+        }
+        if (whiteCanCastleQueenSide()) {
+            fen.append('Q');
+            hasCastlingRights = true;
+        }
+        if (blackCanCastleKingSide()) {
+            fen.append('k');
+            hasCastlingRights = true;
+        }
+        if (blackCanCastleQueenSide()) {
+            fen.append('q');
+            hasCastlingRights = true;
+        }
+        if (!hasCastlingRights) {
+            fen.append('-');
+        }
+    
+        // 4. En passant target square
+        fen.append(' ');
+        if (enPessantPosition != null) {
+            fen.append(toSquareName(enPessantPosition));
+        } else {
+            fen.append('-');
+        }
+    
+        // 5. Halfmove clock
+        fen.append(' ');
+        fen.append(halfMoveClock);
+    
+        // 6. Fullmove number
+        fen.append(' ');
+        fen.append(fullMoveNumber);
+    
+        return fen.toString();
+    }
+    
+    private char getFenSymbol(Piece piece) {
+        char symbol;
+        switch (piece.getType()) {
+            case PAWN:
+                symbol = 'p';
+                break;
+            case ROOK:
+                symbol = 'r';
+                break;
+            case KNIGHT:
+                symbol = 'n';
+                break;
+            case BISHOP:
+                symbol = 'b';
+                break;
+            case QUEEN:
+                symbol = 'q';
+                break;
+            case KING:
+                symbol = 'k';
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown piece type: " + piece.getType());
+        }
+        // Convert to uppercase for white pieces
+        return piece.getPlayerColor() == PlayerColor.WHITE ? Character.toUpperCase(symbol) : symbol;
+    }
+    
+    private String toSquareName(Position position) {
+        char file = (char) ('a' + position.getY());
+        int rank = 8 - position.getX();
+        return "" + file + rank;
+    }
 }

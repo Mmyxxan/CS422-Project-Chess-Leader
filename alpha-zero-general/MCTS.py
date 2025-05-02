@@ -35,24 +35,25 @@ class MCTS():
                    proportional to Nsa[(s,a)]**(1./temp)
         """
         for i in range(self.args.numMCTSSims):
-            self.search(canonicalBoard)
+            # print("New sim")
+            self.search(canonicalBoard, 0)
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
 
-        if temp == 0:
+        if temp == 0: # As the temp is cooling down, only allow optimal moves
             bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
             bestA = np.random.choice(bestAs)
             probs = [0] * len(counts)
             probs[bestA] = 1
             return probs
 
-        counts = [x ** (1. / temp) for x in counts]
+        counts = [x ** (1. / temp) for x in counts] # soft pick of action for stochastic property
         counts_sum = float(sum(counts))
         probs = [x / counts_sum for x in counts]
         return probs
 
-    def search(self, canonicalBoard):
+    def search(self, canonicalBoard, i):
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -72,13 +73,19 @@ class MCTS():
             v: the negative of the value of the current canonicalBoard
         """
 
+        # print("Old board")
+        # for row in canonicalBoard:
+        #     print(" ".join(str(piece) for piece in row))
+
         s = self.game.stringRepresentation(canonicalBoard)
 
         if s not in self.Es:
-            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
+            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1, None)
         if self.Es[s] != 0:
             # terminal node
             return -self.Es[s]
+        if i >= self.game.ROLL_OUT_LIMIT:
+            return 1e-4
 
         if s not in self.Ps:
             # leaf node
@@ -99,6 +106,8 @@ class MCTS():
 
             self.Vs[s] = valids
             self.Ns[s] = 0
+            # for row in canonicalBoard:
+            #     print(" ".join(str(piece) for piece in row))
             return -v
 
         valids = self.Vs[s]
@@ -119,10 +128,15 @@ class MCTS():
                     best_act = a
 
         a = best_act
+        # print(a)
         next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
         next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        v = self.search(next_s)
+        # print("New board")
+        # for row in canonicalBoard:
+        #     print(" ".join(str(piece) for piece in row))
+
+        v = self.search(next_s, i + 1)
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
